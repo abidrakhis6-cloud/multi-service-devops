@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MultiServe</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4b942;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 15px;
+            width: 140px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<h1>Glo-Service🚀</h1>
+
+<div class="grid">
+    <a href="/?category=restaurant" class="card">🍔 Restaurants</a>
+    <a href="/?category=courses" class="card">🛒 Courses</a>
+    <a href="/?category=boutique" class="card">💄 Boutique</a>
+    <a href="/?category=pharmacie" class="card">💊 Pharmacie</a>
+    <a href="/?category=livraison" class="card">🚚 Livraison</a>
+</div>
+<h2 style="text-align:center;">Produits</h2>
+
+<div class="grid">
+    {% for product in products %}
+        <div class="card">
+            {{ product.name }}
+        </div>
+    {% endfor %}
+</div>
+<h2>Magasins</h2>
+
+{% for store in stores %}
+  <a href="/store/{{ store.id }}">
+    <div>{{ store.name }}</div>
+  </a>
+{% endfor %}
+</body>
+</html>

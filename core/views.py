@@ -1,6 +1,13 @@
-from django.http import JsonResponse
-from .models import Product
+from django.shortcuts import render
+from .models import Store, Product
 
-def products(request):
-    data = list(Product.objects.values())
-    return JsonResponse(data, safe=False)
+def home(request):
+    category = request.GET.get('category')
+    stores = Store.objects.filter(category=category) if category else Store.objects.all()
+    return render(request, 'home.html', {'stores': stores})
+
+
+def store_detail(request, store_id):
+    store = Store.objects.get(id=store_id)
+    products = Product.objects.filter(store=store)
+    return render(request, 'store.html', {'store': store, 'products': products})

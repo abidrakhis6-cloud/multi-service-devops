@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import products
+from .views import home, store_detail
 
 urlpatterns = [
-    path('products/', products),
+    path('', home),
+    path('store/<int:store_id>/', store_detail),
 ]

@@ -1,0 +1,7 @@
+<h2>Magasins</h2>
+
+{% for store in stores %}
+  <a href="/store/{{ store.id }}">
+    <div>{{ store.name }}</div>
+  </a>
+{% endfor %}
