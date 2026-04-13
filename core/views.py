@@ -342,11 +342,11 @@ def pharmacie_detail(request, name):
     products_data = {
         'Pharmacie Centrale': [
             {'name': 'Doliprane 1000mg', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Paracétamol - 8 comprimés - Douleurs et fièvre'},
-            {'name': 'Advil 400mg', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1626285861696-9f0bf5a49bd6?w=400', 'description': 'Ibuprofène - 20 comprimés - Anti-inflammatoire'},
+            {'name': 'Advil 400mg', 'price': 4.99, 'image': 'https://placehold.co/200x200/4287f5/white?text=Advil+400mg', 'description': 'Ibuprofène - 20 comprimés - Anti-inflammatoire'},
             {'name': 'Strepsils', 'price': 5.29, 'image': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400', 'description': 'Pastilles pour la gorge - Miel citron'},
-            {'name': 'Vitamine C 1000mg', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=400', 'description': '60 comprimés effervescents - Immunité'},
+            {'name': 'Vitamine C 1000mg', 'price': 8.99, 'image': 'https://placehold.co/200x200/ff9500/white?text=Vitamine+C', 'description': '60 comprimés effervescents - Immunité'},
             {'name': 'Bandages Assortis', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=400', 'description': 'Boîte de 40 pansements multi-tailles'},
-            {'name': 'Thermomètre Digital', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1631217868264-d4bb000b0e33?w=400', 'description': 'Mesure rapide en 10 secondes'},
+            {'name': 'Thermomètre Digital', 'price': 12.99, 'image': 'https://placehold.co/200x200/00bcd4/white?text=Thermometre', 'description': 'Mesure rapide en 10 secondes'},
             {'name': 'Désinfectant Mains', 'price': 3.99, 'image': 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400', 'description': 'Gel hydroalcoolique 500ml'},
             {'name': 'Antihistaminique', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=400', 'description': 'Cetirizine 10mg - Allergies saisonnières'},
         ],
@@ -354,10 +354,10 @@ def pharmacie_detail(request, name):
             {'name': 'Crème Hydratante Nivea', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400', 'description': 'Pot 400ml - Peaux sensibles'},
             {'name': 'Sérum Visage', 'price': 24.99, 'image': 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400', 'description': 'Acide hyaluronique - 30ml - Anti-âge'},
             {'name': 'Masque Cheveux', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400', 'description': 'Kératin repair - Cheveux abîmés'},
-            {'name': 'Dentifrice Blancheur', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1559671088-795c814b9a4e?w=400', 'description': 'Colgate - 3x75ml - Action blancheur'},
+            {'name': 'Dentifrice Blancheur', 'price': 4.49, 'image': 'https://placehold.co/200x200/00d4aa/white?text=Dentifrice', 'description': 'Colgate - 3x75ml - Action blancheur'},
             {'name': 'Déodorant 48h', 'price': 3.99, 'image': 'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=400', 'description': 'Dove - Sans alcool - Invisible'},
             {'name': 'Shampooing Doux', 'price': 5.99, 'image': 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400', 'description': 'Klorane - Usage quotidien 400ml'},
-            {'name': 'Huile Corps Bio', 'price': 14.99, 'image': 'https://images.unsplash.com/photo-1608248597279-f99d160bfbc8?w=400', 'description': 'Argan bio - Hydratation intense 100ml'},
+            {'name': 'Huile Corps Bio', 'price': 14.99, 'image': 'https://placehold.co/200x200/d4a574/white?text=Huile+Bio', 'description': 'Argan bio - Hydratation intense 100ml'},
             {'name': 'Rouge à Lèvres', 'price': 18.99, 'image': 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400', 'description': 'Maybelline Super Stay - Tenue 24h'},
         ]
     }
