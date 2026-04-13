@@ -9,3 +9,4 @@ channels-redis
 dj-database-url
 whitenoise
 python-decouple
+stripe

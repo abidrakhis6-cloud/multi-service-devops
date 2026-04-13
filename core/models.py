@@ -131,3 +131,56 @@ class Message(models.Model):
     
     def __str__(self):
         return f"Message from {self.user.username} - Order {self.order.id}"
+
+
+class UserBankAccount(models.Model):
+    """Store user's bank account info for receiving payments (Stripe Connect)"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='bank_account')
+    account_holder_name = models.CharField(max_length=200)
+    iban = models.CharField(max_length=34, blank=True, help_text="IBAN pour virements")
+    bic_swift = models.CharField(max_length=11, blank=True, help_text="BIC/SWIFT")
+    bank_name = models.CharField(max_length=100, blank=True)
+    
+    # Stripe Connect fields
+    stripe_account_id = models.CharField(max_length=100, blank=True, help_text="Stripe Connected Account ID")
+    stripe_bank_account_id = models.CharField(max_length=100, blank=True)
+    is_verified = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Bank Account - {self.user.username}"
+    
+    class Meta:
+        verbose_name_plural = "User Bank Accounts"
+
+
+class Invoice(models.Model):
+    """Invoice model for orders"""
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='invoice')
+    invoice_number = models.CharField(max_length=50, unique=True)
+    amount_ttc = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_ht = models.DecimalField(max_digits=10, decimal_places=2)
+    vat_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=20.00)
+    
+    store_name = models.CharField(max_length=200)
+    store_address = models.TextField()
+    store_siret = models.CharField(max_length=14, blank=True, help_text="SIRET du magasin")
+    
+    customer_name = models.CharField(max_length=200)
+    customer_email = models.EmailField()
+    customer_address = models.TextField()
+    
+    payment_method = models.CharField(max_length=50)
+    payment_date = models.DateTimeField()
+    
+    pdf_url = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Facture {self.invoice_number}"
+    
+    class Meta:
+        verbose_name_plural = "Invoices"

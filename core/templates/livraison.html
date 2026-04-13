@@ -458,16 +458,17 @@
     <div class="map-container">
         <div id="map"></div>
         <div class="map-overlay">
-            <p>🚚 Livreur en déplacement</p>
-            <p class="distance" id="distance-info">À 0.8 km - 3 min d'arrivée</p>
+            <p><strong>� {{ store.name }}</strong> - {{ store.address }}</p>
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 5px;">➜ {{ customer.address }}</p>
+            <p class="distance" id="distance-info" style="margin-top: 10px;">Calcul de l'itinéraire...</p>
         </div>
     </div>
 
     <div class="driver-info">
         <div class="estimated-time">
             <h3><i class="fas fa-clock"></i> Livraison estimée</h3>
-            <div class="time" id="estimated-time">14:32</div>
-            <p style="margin-top: 5px; opacity: 0.9;">Dans <span id="minutes-left">8</span> minutes</p>
+            <div class="time" id="estimated-time">--:--</div>
+            <p style="margin-top: 5px; opacity: 0.9;">En cours de calcul...</p>
         </div>
 
         <div class="driver-card">
@@ -475,9 +476,9 @@
                 <i class="fas fa-user"></i>
             </div>
             <div class="driver-details">
-                <h3>Ahmed K.</h3>
-                <p>🚲 Vélo électrique - #LVR-2847</p>
-                <div class="rating">⭐⭐⭐⭐⭐ 4.9 (128 livraisons)</div>
+                <h3>{{ driver.name }}</h3>
+                <p>{{ driver.vehicle }} - #{{ driver.id }}</p>
+                <div class="rating">⭐⭐⭐⭐⭐ {{ driver.rating }} ({{ driver.deliveries }} livraisons)</div>
             </div>
         </div>
 
@@ -528,7 +529,7 @@
                 <i class="fas fa-comment"></i>
                 <span>Chat</span>
             </button>
-            <a href="tel:0612345678" class="comm-btn">
+            <a href="tel:{{ driver.phone }}" class="comm-btn">
                 <i class="fas fa-phone"></i>
                 <span>Appel</span>
             </a>
@@ -620,12 +621,20 @@
 </div>
 
 <script>
+// Get coordinates from Django context
+const storeLat = {{ store.lat }};
+const storeLng = {{ store.lng }};
+const customerLat = {{ customer.lat }};
+const customerLng = {{ customer.lng }};
+
 // Initialize map
 let map;
 let driverMarker;
 let customerMarker;
-let driverPosition = { lat: 48.8566, lng: 2.3522 }; // Starting position
-let customerPosition = { lat: 48.8589, lng: 2.3470 }; // Customer position
+let storeMarker;
+let driverPosition = { lat: storeLat, lng: storeLng }; // Start from store
+let customerPosition = { lat: customerLat, lng: customerLng }; // End at customer
+let storePosition = { lat: storeLat, lng: storeLng };
 
 function initMap() {
     // Create map centered between driver and customer

@@ -18,7 +18,10 @@ def restaurants(request):
             'description': 'Poulet frit croustillant, burgers et buckets',
             'rating': 4.5,
             'delivery_time': '25-35 min',
-            'delivery_fee': 2.99
+            'delivery_fee': 2.99,
+            'address': '12 Rue de Rivoli, 75004 Paris',
+            'lat': 48.8554,
+            'lng': 2.3522
         },
         {
             'name': 'McDonald\'s',
@@ -26,7 +29,10 @@ def restaurants(request):
             'description': 'Burgers, frites, menus Happy Meal et plus',
             'rating': 4.3,
             'delivery_time': '20-30 min',
-            'delivery_fee': 1.99
+            'delivery_fee': 1.99,
+            'address': '45 Avenue des Champs-Élysées, 75008 Paris',
+            'lat': 48.8698,
+            'lng': 2.3078
         },
         {
             'name': 'Quick',
@@ -34,7 +40,10 @@ def restaurants(request):
             'description': 'Burgers savoureux et menus gourmands',
             'rating': 4.2,
             'delivery_time': '25-35 min',
-            'delivery_fee': 2.49
+            'delivery_fee': 2.49,
+            'address': '28 Boulevard de Sébastopol, 75004 Paris',
+            'lat': 48.8606,
+            'lng': 2.3489
         }
     ]
     return render(request, 'restaurants.html', {'stores': stores_data})
@@ -89,7 +98,10 @@ def courses(request):
             'description': 'Supermarché discount avec produits de qualité',
             'rating': 4.3,
             'delivery_time': '30-45 min',
-            'delivery_fee': 1.99
+            'delivery_fee': 1.99,
+            'address': '89 Rue de la Roquette, 75011 Paris',
+            'lat': 48.8534,
+            'lng': 2.3788
         },
         {
             'name': 'Leclerc',
@@ -97,7 +109,10 @@ def courses(request):
             'description': 'Hypermarché avec large choix de produits',
             'rating': 4.5,
             'delivery_time': '35-50 min',
-            'delivery_fee': 2.99
+            'delivery_fee': 2.99,
+            'address': '15 Rue Linois, 75015 Paris',
+            'lat': 48.8489,
+            'lng': 2.2829
         },
         {
             'name': 'Aldi',
@@ -105,7 +120,10 @@ def courses(request):
             'description': 'Supermarché discount européen',
             'rating': 4.2,
             'delivery_time': '30-45 min',
-            'delivery_fee': 1.99
+            'delivery_fee': 1.99,
+            'address': '56 Avenue de Clichy, 75017 Paris',
+            'lat': 48.8842,
+            'lng': 2.3128
         },
         {
             'name': 'Carrefour',
@@ -113,7 +131,10 @@ def courses(request):
             'description': 'Hypermarché international leader mondial',
             'rating': 4.4,
             'delivery_time': '35-50 min',
-            'delivery_fee': 2.49
+            'delivery_fee': 2.49,
+            'address': '1 Rue de Rivoli, 75001 Paris',
+            'lat': 48.8565,
+            'lng': 2.3522
         },
         {
             'name': 'Super U',
@@ -121,7 +142,10 @@ def courses(request):
             'description': 'Supermarché de proximité français',
             'rating': 4.3,
             'delivery_time': '30-45 min',
-            'delivery_fee': 1.99
+            'delivery_fee': 1.99,
+            'address': '32 Rue des Martyrs, 75009 Paris',
+            'lat': 48.8794,
+            'lng': 2.3408
         }
     ]
     return render(request, 'courses.html', {'stores': stores_data})
@@ -194,7 +218,10 @@ def boutiques(request):
             'description': 'iPhone, MacBook, iPad, Apple Watch et accessoires',
             'rating': 4.8,
             'delivery_time': '20-30 min',
-            'delivery_fee': 0.00
+            'delivery_fee': 0.00,
+            'address': "1 Avenue de l'Opéra, 75001 Paris",
+            'lat': 48.8656,
+            'lng': 2.3344
         },
         {
             'name': 'Dior',
@@ -202,7 +229,10 @@ def boutiques(request):
             'description': 'Mode luxe, chaussures, t-shirts, pantalons',
             'rating': 4.9,
             'delivery_time': '25-35 min',
-            'delivery_fee': 5.99
+            'delivery_fee': 5.99,
+            'address': '30 Avenue Montaigne, 75008 Paris',
+            'lat': 48.8661,
+            'lng': 2.3037
         },
         {
             'name': 'Chanel',
@@ -210,7 +240,10 @@ def boutiques(request):
             'description': 'Parfums, maquillage, sacs de luxe',
             'rating': 4.9,
             'delivery_time': '25-35 min',
-            'delivery_fee': 5.99
+            'delivery_fee': 5.99,
+            'address': '31 Rue Cambon, 75001 Paris',
+            'lat': 48.8691,
+            'lng': 2.3263
         },
         {
             'name': 'Louis Vuitton',
@@ -218,7 +251,10 @@ def boutiques(request):
             'description': 'Maroquinerie de luxe, sacs, bagages',
             'rating': 4.8,
             'delivery_time': '25-35 min',
-            'delivery_fee': 5.99
+            'delivery_fee': 5.99,
+            'address': '101 Avenue des Champs-Élysées, 75008 Paris',
+            'lat': 48.8700,
+            'lng': 2.3035
         }
     ]
     return render(request, 'boutiques.html', {'stores': stores_data})
@@ -282,7 +318,10 @@ def pharmacie(request):
             'description': 'Médicaments sur ordonnance et sans ordonnance',
             'rating': 4.7,
             'delivery_time': '15-25 min',
-            'delivery_fee': 1.99
+            'delivery_fee': 1.99,
+            'address': '5 Rue de la Paix, 75002 Paris',
+            'lat': 48.8693,
+            'lng': 2.3310
         },
         {
             'name': 'Parapharmacie Beauté',
@@ -290,7 +329,10 @@ def pharmacie(request):
             'description': 'Produits de beauté, soins et cosmétiques',
             'rating': 4.6,
             'delivery_time': '20-30 min',
-            'delivery_fee': 1.99
+            'delivery_fee': 1.99,
+            'address': '18 Rue du Commerce, 75015 Paris',
+            'lat': 48.8450,
+            'lng': 2.2939
         }
     ]
     return render(request, 'pharmacie.html', {'stores': stores_data})
@@ -333,7 +375,34 @@ def pharmacie_detail(request, name):
 
 
 def livraison(request):
-    return render(request, 'livraison.html')
+    # Get current order info from session or create default
+    store = request.session.get('current_store', {
+        'name': 'KFC',
+        'address': '12 Rue de Rivoli, 75004 Paris',
+        'lat': 48.8554,
+        'lng': 2.3522
+    })
+    
+    # Get customer address
+    customer_address = request.session.get('customer_address', {
+        'address': '25 Rue de la Paix, 75002 Paris',
+        'lat': 48.8689,
+        'lng': 2.3310
+    })
+    
+    context = {
+        'store': store,
+        'customer': customer_address,
+        'driver': {
+            'name': 'Ahmed K.',
+            'phone': '0612345678',
+            'vehicle': '🚲 Vélo électrique',
+            'id': 'LVR-2847',
+            'rating': 4.9,
+            'deliveries': 128
+        }
+    }
+    return render(request, 'livraison.html', context)
 
 
 def cart_view(request):
