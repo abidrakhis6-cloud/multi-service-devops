@@ -14,7 +14,7 @@ def restaurants(request):
     stores_data = [
         {
             'name': 'KFC',
-            'image': 'https://logos-world.net/wp-content/uploads/2020/04/KFC-Logo.png',
+            'image': 'https://placehold.co/200x200/red/white?text=KFC',
             'description': 'Poulet frit croustillant, burgers et buckets',
             'rating': 4.5,
             'delivery_time': '25-35 min',
@@ -25,7 +25,7 @@ def restaurants(request):
         },
         {
             'name': 'McDonald\'s',
-            'image': 'https://logos-world.net/wp-content/uploads/2020/04/McDonalds-Logo.png',
+            'image': 'https://placehold.co/200x200/daa520/white?text=McDo',
             'description': 'Burgers, frites, menus Happy Meal et plus',
             'rating': 4.3,
             'delivery_time': '20-30 min',
@@ -36,7 +36,7 @@ def restaurants(request):
         },
         {
             'name': 'Quick',
-            'image': 'https://logos-world.net/wp-content/uploads/2022/04/Quick-Logo.png',
+            'image': 'https://placehold.co/200x200/ff6600/white?text=Quick',
             'description': 'Burgers savoureux et menus gourmands',
             'rating': 4.2,
             'delivery_time': '25-35 min',
@@ -78,9 +78,9 @@ def restaurant_detail(request, name):
     }
     
     store_info = {
-        'KFC': {'image': 'https://logos-world.net/wp-content/uploads/2020/04/KFC-Logo.png', 'rating': 4.5},
-        'McDonald\'s': {'image': 'https://logos-world.net/wp-content/uploads/2020/04/McDonalds-Logo.png', 'rating': 4.3},
-        'Quick': {'image': 'https://logos-world.net/wp-content/uploads/2022/04/Quick-Logo.png', 'rating': 4.2}
+        'KFC': {'image': 'https://placehold.co/200x200/red/white?text=KFC', 'rating': 4.5},
+        'McDonald\'s': {'image': 'https://placehold.co/200x200/daa520/white?text=McDo', 'rating': 4.3},
+        'Quick': {'image': 'https://placehold.co/200x200/ff6600/white?text=Quick', 'rating': 4.2}
     }
     
     products = products_data.get(name, [])
@@ -94,7 +94,7 @@ def courses(request):
     stores_data = [
         {
             'name': 'Lidl',
-            'image': 'https://logos-world.net/wp-content/uploads/2022/01/Lidl-Logo.png',
+            'image': 'https://placehold.co/200x200/0050aa/white?text=Lidl',
             'description': 'Supermarché discount avec produits de qualité',
             'rating': 4.3,
             'delivery_time': '30-45 min',
@@ -105,7 +105,7 @@ def courses(request):
         },
         {
             'name': 'Leclerc',
-            'image': 'https://www.leclerc.fr/images/logos/e-leclerc-logo.png',
+            'image': 'https://placehold.co/200x200/0066cc/white?text=Leclerc',
             'description': 'Hypermarché avec large choix de produits',
             'rating': 4.5,
             'delivery_time': '35-50 min',
@@ -116,7 +116,7 @@ def courses(request):
         },
         {
             'name': 'Aldi',
-            'image': 'https://www.aldi.fr/content/dam/aldi/logos/aldi-logo.png',
+            'image': 'https://placehold.co/200x200/0000cc/white?text=Aldi',
             'description': 'Supermarché discount européen',
             'rating': 4.2,
             'delivery_time': '30-45 min',
@@ -127,7 +127,7 @@ def courses(request):
         },
         {
             'name': 'Carrefour',
-            'image': 'https://www.carrefour.fr/images/logos/carrefour-logo.png',
+            'image': 'https://placehold.co/200x200/cc0000/white?text=Carrefour',
             'description': 'Hypermarché international leader mondial',
             'rating': 4.4,
             'delivery_time': '35-50 min',
@@ -138,7 +138,7 @@ def courses(request):
         },
         {
             'name': 'Super U',
-            'image': 'https://www.superu.fr/images/logos/superu-logo.png',
+            'image': 'https://placehold.co/200x200/009900/white?text=Super+U',
             'description': 'Supermarché de proximité français',
             'rating': 4.3,
             'delivery_time': '30-45 min',
@@ -196,11 +196,11 @@ def courses_detail(request, name):
     }
     
     store_info = {
-        'Lidl': {'image': 'https://logos-world.net/wp-content/uploads/2022/01/Lidl-Logo.png', 'rating': 4.3},
-        'Leclerc': {'image': 'https://www.leclerc.fr/images/logos/e-leclerc-logo.png', 'rating': 4.5},
-        'Aldi': {'image': 'https://www.aldi.fr/content/dam/aldi/logos/aldi-logo.png', 'rating': 4.2},
-        'Carrefour': {'image': 'https://www.carrefour.fr/images/logos/carrefour-logo.png', 'rating': 4.4},
-        'Super U': {'image': 'https://www.superu.fr/images/logos/superu-logo.png', 'rating': 4.3}
+        'Lidl': {'image': 'https://placehold.co/200x200/0050aa/white?text=Lidl', 'rating': 4.3},
+        'Leclerc': {'image': 'https://placehold.co/200x200/0066cc/white?text=Leclerc', 'rating': 4.5},
+        'Aldi': {'image': 'https://placehold.co/200x200/0000cc/white?text=Aldi', 'rating': 4.2},
+        'Carrefour': {'image': 'https://placehold.co/200x200/cc0000/white?text=Carrefour', 'rating': 4.4},
+        'Super U': {'image': 'https://placehold.co/200x200/009900/white?text=Super+U', 'rating': 4.3}
     }
     
     products = products_data.get(name, [])
@@ -214,7 +214,7 @@ def boutiques(request):
     stores_data = [
         {
             'name': 'Apple Store',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/640px-Apple_logo_black.svg.png',
+            'image': 'https://placehold.co/200x200/333333/white?text=Apple',
             'description': 'iPhone, MacBook, iPad, Apple Watch et accessoires',
             'rating': 4.8,
             'delivery_time': '20-30 min',
@@ -225,7 +225,7 @@ def boutiques(request):
         },
         {
             'name': 'Dior',
-            'image': 'https://logos-world.net/wp-content/uploads/2022/12/Dior-Logo.png',
+            'image': 'https://placehold.co/200x200/000000/white?text=Dior',
             'description': 'Mode luxe, chaussures, t-shirts, pantalons',
             'rating': 4.9,
             'delivery_time': '25-35 min',
@@ -236,7 +236,7 @@ def boutiques(request):
         },
         {
             'name': 'Chanel',
-            'image': 'https://logos-world.net/wp-content/uploads/2022/12/Chanel-Logo.png',
+            'image': 'https://placehold.co/200x200/000000/white?text=Chanel',
             'description': 'Parfums, maquillage, sacs de luxe',
             'rating': 4.9,
             'delivery_time': '25-35 min',
@@ -247,7 +247,7 @@ def boutiques(request):
         },
         {
             'name': 'Louis Vuitton',
-            'image': 'https://logos-world.net/wp-content/uploads/2022/12/Louis-Vuitton-Logo.png',
+            'image': 'https://placehold.co/200x200/8B4513/white?text=LV',
             'description': 'Maroquinerie de luxe, sacs, bagages',
             'rating': 4.8,
             'delivery_time': '25-35 min',
@@ -297,10 +297,10 @@ def boutique_detail(request, name):
     }
     
     store_info = {
-        'Apple Store': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/640px-Apple_logo_black.svg.png', 'rating': 4.8},
-        'Dior': {'image': 'https://logos-world.net/wp-content/uploads/2022/12/Dior-Logo.png', 'rating': 4.9},
-        'Chanel': {'image': 'https://logos-world.net/wp-content/uploads/2022/12/Chanel-Logo.png', 'rating': 4.9},
-        'Louis Vuitton': {'image': 'https://logos-world.net/wp-content/uploads/2022/12/Louis-Vuitton-Logo.png', 'rating': 4.8}
+        'Apple Store': {'image': 'https://placehold.co/200x200/333333/white?text=Apple', 'rating': 4.8},
+        'Dior': {'image': 'https://placehold.co/200x200/000000/white?text=Dior', 'rating': 4.9},
+        'Chanel': {'image': 'https://placehold.co/200x200/000000/white?text=Chanel', 'rating': 4.9},
+        'Louis Vuitton': {'image': 'https://placehold.co/200x200/8B4513/white?text=LV', 'rating': 4.8}
     }
     
     products = products_data.get(name, [])
@@ -314,7 +314,7 @@ def pharmacie(request):
     stores_data = [
         {
             'name': 'Pharmacie Centrale',
-            'image': 'https://cdn-icons-png.flaticon.com/512/4320/4320337.png',
+            'image': 'https://placehold.co/200x200/00aa44/white?text=Pharmacie',
             'description': 'Médicaments sur ordonnance et sans ordonnance',
             'rating': 4.7,
             'delivery_time': '15-25 min',
@@ -325,7 +325,7 @@ def pharmacie(request):
         },
         {
             'name': 'Parapharmacie Beauté',
-            'image': 'https://cdn-icons-png.flaticon.com/512/1005/1005141.png',
+            'image': 'https://placehold.co/200x200/ff69b4/white?text=Beaute',
             'description': 'Produits de beauté, soins et cosmétiques',
             'rating': 4.6,
             'delivery_time': '20-30 min',
@@ -363,8 +363,8 @@ def pharmacie_detail(request, name):
     }
     
     store_info = {
-        'Pharmacie Centrale': {'image': 'https://cdn-icons-png.flaticon.com/512/4320/4320337.png', 'rating': 4.7},
-        'Parapharmacie Beauté': {'image': 'https://cdn-icons-png.flaticon.com/512/1005/1005141.png', 'rating': 4.6}
+        'Pharmacie Centrale': {'image': 'https://placehold.co/200x200/00aa44/white?text=Pharmacie', 'rating': 4.7},
+        'Parapharmacie Beauté': {'image': 'https://placehold.co/200x200/ff69b4/white?text=Beaute', 'rating': 4.6}
     }
     
     products = products_data.get(name, [])
