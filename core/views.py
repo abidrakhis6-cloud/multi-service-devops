@@ -14,7 +14,7 @@ def restaurants(request):
     stores_data = [
         {
             'name': 'KFC',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/KFC_Logo.svg/1200px-KFC_Logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2020/04/KFC-Logo.png',
             'description': 'Poulet frit croustillant, burgers et buckets',
             'rating': 4.5,
             'delivery_time': '25-35 min',
@@ -25,7 +25,7 @@ def restaurants(request):
         },
         {
             'name': 'McDonald\'s',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1200px-McDonald%27s_logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2020/04/McDonalds-Logo.png',
             'description': 'Burgers, frites, menus Happy Meal et plus',
             'rating': 4.3,
             'delivery_time': '20-30 min',
@@ -36,7 +36,7 @@ def restaurants(request):
         },
         {
             'name': 'Quick',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Quick_logo.svg/1200px-Quick_logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2022/04/Quick-Logo.png',
             'description': 'Burgers savoureux et menus gourmands',
             'rating': 4.2,
             'delivery_time': '25-35 min',
@@ -78,9 +78,9 @@ def restaurant_detail(request, name):
     }
     
     store_info = {
-        'KFC': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/KFC_Logo.svg/1200px-KFC_Logo.svg.png', 'rating': 4.5},
-        'McDonald\'s': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1200px-McDonald%27s_logo.svg.png', 'rating': 4.3},
-        'Quick': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Quick_logo.svg/1200px-Quick_logo.svg.png', 'rating': 4.2}
+        'KFC': {'image': 'https://logos-world.net/wp-content/uploads/2020/04/KFC-Logo.png', 'rating': 4.5},
+        'McDonald\'s': {'image': 'https://logos-world.net/wp-content/uploads/2020/04/McDonalds-Logo.png', 'rating': 4.3},
+        'Quick': {'image': 'https://logos-world.net/wp-content/uploads/2022/04/Quick-Logo.png', 'rating': 4.2}
     }
     
     products = products_data.get(name, [])
@@ -94,7 +94,7 @@ def courses(request):
     stores_data = [
         {
             'name': 'Lidl',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Lidl-Logo.svg/1200px-Lidl-Logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2022/01/Lidl-Logo.png',
             'description': 'Supermarché discount avec produits de qualité',
             'rating': 4.3,
             'delivery_time': '30-45 min',
@@ -105,7 +105,7 @@ def courses(request):
         },
         {
             'name': 'Leclerc',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/E.Leclerc_logo.svg/1200px-E.Leclerc_logo.svg.png',
+            'image': 'https://www.leclerc.fr/images/logos/e-leclerc-logo.png',
             'description': 'Hypermarché avec large choix de produits',
             'rating': 4.5,
             'delivery_time': '35-50 min',
@@ -116,7 +116,7 @@ def courses(request):
         },
         {
             'name': 'Aldi',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aldi_logo.svg/1200px-Aldi_logo.svg.png',
+            'image': 'https://www.aldi.fr/content/dam/aldi/logos/aldi-logo.png',
             'description': 'Supermarché discount européen',
             'rating': 4.2,
             'delivery_time': '30-45 min',
@@ -127,7 +127,7 @@ def courses(request):
         },
         {
             'name': 'Carrefour',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Carrefour_logo.svg/1200px-Carrefour_logo.svg.png',
+            'image': 'https://www.carrefour.fr/images/logos/carrefour-logo.png',
             'description': 'Hypermarché international leader mondial',
             'rating': 4.4,
             'delivery_time': '35-50 min',
@@ -138,7 +138,7 @@ def courses(request):
         },
         {
             'name': 'Super U',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Super_U_logo.svg/1200px-Super_U_logo.svg.png',
+            'image': 'https://www.superu.fr/images/logos/superu-logo.png',
             'description': 'Supermarché de proximité français',
             'rating': 4.3,
             'delivery_time': '30-45 min',
@@ -196,11 +196,11 @@ def courses_detail(request, name):
     }
     
     store_info = {
-        'Lidl': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Lidl-Logo.svg/1200px-Lidl-Logo.svg.png', 'rating': 4.3},
-        'Leclerc': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/E.Leclerc_logo.svg/1200px-E.Leclerc_logo.svg.png', 'rating': 4.5},
-        'Aldi': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aldi_logo.svg/1200px-Aldi_logo.svg.png', 'rating': 4.2},
-        'Carrefour': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Carrefour_logo.svg/1200px-Carrefour_logo.svg.png', 'rating': 4.4},
-        'Super U': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Super_U_logo.svg/1200px-Super_U_logo.svg.png', 'rating': 4.3}
+        'Lidl': {'image': 'https://logos-world.net/wp-content/uploads/2022/01/Lidl-Logo.png', 'rating': 4.3},
+        'Leclerc': {'image': 'https://www.leclerc.fr/images/logos/e-leclerc-logo.png', 'rating': 4.5},
+        'Aldi': {'image': 'https://www.aldi.fr/content/dam/aldi/logos/aldi-logo.png', 'rating': 4.2},
+        'Carrefour': {'image': 'https://www.carrefour.fr/images/logos/carrefour-logo.png', 'rating': 4.4},
+        'Super U': {'image': 'https://www.superu.fr/images/logos/superu-logo.png', 'rating': 4.3}
     }
     
     products = products_data.get(name, [])
@@ -214,7 +214,7 @@ def boutiques(request):
     stores_data = [
         {
             'name': 'Apple Store',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/640px-Apple_logo_black.svg.png',
             'description': 'iPhone, MacBook, iPad, Apple Watch et accessoires',
             'rating': 4.8,
             'delivery_time': '20-30 min',
@@ -225,7 +225,7 @@ def boutiques(request):
         },
         {
             'name': 'Dior',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Dior_Logo.svg/1200px-Dior_Logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2022/12/Dior-Logo.png',
             'description': 'Mode luxe, chaussures, t-shirts, pantalons',
             'rating': 4.9,
             'delivery_time': '25-35 min',
@@ -236,7 +236,7 @@ def boutiques(request):
         },
         {
             'name': 'Chanel',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Chanel_logo.svg/1200px-Chanel_logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2022/12/Chanel-Logo.png',
             'description': 'Parfums, maquillage, sacs de luxe',
             'rating': 4.9,
             'delivery_time': '25-35 min',
@@ -247,7 +247,7 @@ def boutiques(request):
         },
         {
             'name': 'Louis Vuitton',
-            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Louis_Vuitton_logo.svg/1200px-Louis_Vuitton_logo.svg.png',
+            'image': 'https://logos-world.net/wp-content/uploads/2022/12/Louis-Vuitton-Logo.png',
             'description': 'Maroquinerie de luxe, sacs, bagages',
             'rating': 4.8,
             'delivery_time': '25-35 min',
@@ -297,10 +297,10 @@ def boutique_detail(request, name):
     }
     
     store_info = {
-        'Apple Store': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png', 'rating': 4.8},
-        'Dior': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Dior_Logo.svg/1200px-Dior_Logo.svg.png', 'rating': 4.9},
-        'Chanel': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Chanel_logo.svg/1200px-Chanel_logo.svg.png', 'rating': 4.9},
-        'Louis Vuitton': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Louis_Vuitton_logo.svg/1200px-Louis_Vuitton_logo.svg.png', 'rating': 4.8}
+        'Apple Store': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/640px-Apple_logo_black.svg.png', 'rating': 4.8},
+        'Dior': {'image': 'https://logos-world.net/wp-content/uploads/2022/12/Dior-Logo.png', 'rating': 4.9},
+        'Chanel': {'image': 'https://logos-world.net/wp-content/uploads/2022/12/Chanel-Logo.png', 'rating': 4.9},
+        'Louis Vuitton': {'image': 'https://logos-world.net/wp-content/uploads/2022/12/Louis-Vuitton-Logo.png', 'rating': 4.8}
     }
     
     products = products_data.get(name, [])
