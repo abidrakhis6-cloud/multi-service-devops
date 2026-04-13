@@ -435,6 +435,11 @@ def register(request):
     return render(request, 'register.html')
 
 
+def bank_setup(request):
+    """Bank account setup page"""
+    return render(request, 'bank_setup.html')
+
+
 # API Views for SMS and Voice
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt

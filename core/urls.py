@@ -18,8 +18,9 @@ urlpatterns = [
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.register, name='register'),
-    # Invoice
+    # Invoice & Bank Setup
     path('invoice/<int:invoice_id>/', stripe_views.get_invoice_pdf, name='invoice_pdf'),
+    path('bank-setup/', views.bank_setup, name='bank_setup'),
     # API endpoints
     path('api/send-sms/', views.send_sms_api, name='send_sms'),
     path('api/send-verification-sms/', views.send_verification_sms, name='send_verification_sms'),
