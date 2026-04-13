@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multiserve-app
+spec:
+  replicas: 5
+  template:
+    spec:
+      containers:
+        - name: app
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 5

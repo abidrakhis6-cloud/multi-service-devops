@@ -1,0 +1,344 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}MultiServe - Services à Domicile{% endblock %}</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+    --bg: #0a1628;
+    --card: #1e3a5f;
+    --text: #ffffff;
+    --accent: #1e40af;
+    --accent-hover: #3b82f6;
+    --border: #2d5a87;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --gradient-1: #0f172a;
+    --gradient-2: #1e3a5f;
+}
+
+.light-mode {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #1e293b;
+    --accent: #1e40af;
+    --accent-hover: #3b82f6;
+    --border: #cbd5e1;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --gradient-1: #f8fafc;
+    --gradient-2: #e2e8f0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, var(--gradient-1) 0%, var(--gradient-2) 100%);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+header {
+    background: linear-gradient(90deg, #020617 0%, #0f172a 50%, #1e3a5f 100%);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.light-mode header {
+    background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: white;
+}
+
+.logo i {
+    font-size: 28px;
+    color: #60a5fa;
+}
+
+.logo h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(90deg, #60a5fa, #ffffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.cart-btn {
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.cart-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.cart-count {
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.card {
+    background: var(--card);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px var(--shadow);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px var(--shadow);
+}
+
+.btn {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.btn-success:hover {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+/* Footer */
+footer {
+    background: linear-gradient(90deg, #020617 0%, #0f172a 50%, #1e3a5f 100%);
+    padding: 40px 30px;
+    margin-top: 50px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.light-mode footer {
+    background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .container {
+        padding: 15px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <a href="/" class="logo">
+        <i class="fas fa-rocket"></i>
+        <h1>MultiServe</h1>
+    </a>
+
+    <div class="nav-links">
+        <a href="/restaurants"><i class="fas fa-utensils"></i> Restaurants</a>
+        <a href="/courses"><i class="fas fa-shopping-basket"></i> Courses</a>
+        <a href="/boutiques"><i class="fas fa-store"></i> Boutiques</a>
+        <a href="/pharmacie"><i class="fas fa-pills"></i> Pharmacie</a>
+        <a href="/livraison"><i class="fas fa-map-marker-alt"></i> Livraison</a>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="theme-toggle" onclick="toggleMode()" title="Mode Clair/Sombre">
+            <i class="fas fa-sun" id="theme-icon"></i>
+        </button>
+        <a href="/cart" class="cart-btn">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Panier</span>
+            <span class="cart-count" id="count">0</span>
+        </a>
+        {% if user.is_authenticated %}
+        <a href="/logout" class="btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+        {% else %}
+        <a href="/login" class="btn"><i class="fas fa-user"></i> Connexion</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="container">
+{% block content %}{% endblock %}
+</div>
+
+<footer>
+    <p>&copy; 2024 MultiServe - Tous vos services à domicile</p>
+    <p style="margin-top: 10px; font-size: 14px;">
+        <i class="fas fa-envelope"></i> contact@multiserve.com | 
+        <i class="fas fa-phone"></i> 01 23 45 67 89
+    </p>
+</footer>
+
+<script>
+function toggleMode(){
+    document.body.classList.toggle("light-mode");
+    const icon = document.getElementById("theme-icon");
+    if (document.body.classList.contains("light-mode")) {
+        icon.classList.remove("fa-sun");
+        icon.classList.add("fa-moon");
+        localStorage.setItem("theme", "light");
+    } else {
+        icon.classList.remove("fa-moon");
+        icon.classList.add("fa-sun");
+        localStorage.setItem("theme", "dark");
+    }
+}
+
+function updateCartCount(){
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    let countEl = document.getElementById("count");
+    if(countEl){
+        countEl.innerText = totalItems;
+        if (totalItems > 0) {
+            countEl.style.display = 'flex';
+        } else {
+            countEl.style.display = 'none';
+        }
+    }
+}
+
+// Check saved theme on load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem("theme");
+    const icon = document.getElementById("theme-icon");
+    if (savedTheme === "light") {
+        document.body.classList.add("light-mode");
+        icon.classList.remove("fa-sun");
+        icon.classList.add("fa-moon");
+    }
+    updateCartCount();
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,31 +1,262 @@
+# ==========================================
+# MultiServe - Docker Compose Production
+# Services: Django App + PostgreSQL + Nginx + Redis + Prometheus + Grafana
+# ==========================================
+
 version: '3.8'
 
 services:
-  web:
-    build: .
-    container_name: multisserve_app
-    command: python manage.py runserver 0.0.0.0:8000
+  # ==========================================
+  # Django Application
+  # ==========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: multiserve_app
+    restart: unless-stopped
+    environment:
+      # Database Configuration
+      - DEBUG=False
+      - DB_ENGINE=postgresql
+      - DB_NAME=${DB_NAME:-multiserve}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-changeme}
+      - DB_HOST=db
+      - DB_PORT=5432
+      
+      # Redis Configuration
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      
+      # Security
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-me-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      
+      # Media/Static
+      - MEDIA_URL=/media/
+      - STATIC_URL=/static/
     volumes:
-      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  db:
+    image: postgres:15-alpine
+    container_name: multiserve_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-multiserve}
+      - POSTGRES_USER=${DB_USER:-admin}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-multiserve}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Sécurité: Ne pas exposer le port en production
+    # ports:
+    #   - "5432:5432"  # Décommenter uniquement pour développement local
+
+  # ==========================================
+  # Redis Cache & Sessions
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: multiserve_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    # Sécurité: Ne pas exposer le port en production
+    # ports:
+    #   - "6379:6379"  # Décommenter uniquement pour développement local
+
+  # ==========================================
+  # Nginx Reverse Proxy
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: multiserve_nginx
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - static_volume:/var/www/static:ro
+      - media_volume:/var/www/media:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Prometheus - Monitoring
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: multiserve_prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    networks:
+      - backend
+    # Pas exposé publiquement - accessible via Grafana ou VPN
+    # ports:
+    #   - "9090:9090"
+
+  # ==========================================
+  # Grafana - Dashboards
+  # ==========================================
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: multiserve_grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost/grafana}
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - prometheus
+
+  # ==========================================
+  # Node Exporter - System Metrics
+  # ==========================================
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    container_name: multiserve_node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - backend
+
+  # ==========================================
+  # Redis Exporter - Redis Metrics
+  # ==========================================
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.53.0
+    container_name: multiserve_redis_exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+    networks:
+      - backend
+    depends_on:
+      - redis
+
+  # ==========================================
+  # Postgres Exporter - DB Metrics
+  # ==========================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.14.0
+    container_name: multiserve_postgres_exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DB_USER:-admin}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-multiserve}?sslmode=disable
+    networks:
+      - backend
     depends_on:
       - db
 
-  db:
-    image: postgres:15
-    container_name: multisserve_db
-    environment:
-      POSTGRES_DB: multisserve
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-    ports:
-      - "5432:5432"
+# ==========================================
+# VOLUMES
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
 
-  nginx:
-    image: nginx:latest
-    container_name: multisserve_nginx
-    ports:
-      - "80:80"
-    depends_on:
-      - web
+# ==========================================
+# NETWORKS
+# ==========================================
+networks:
+  frontend:
+    driver: bridge
+    name: multiserve_frontend
+  backend:
+    driver: bridge
+    internal: true
+    name: multiserve_backend

@@ -1,0 +1,402 @@
+# ==========================================
+# MultiServe - CI/CD Pipeline
+# GitHub Actions - Test, Build, Deploy
+# ==========================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, feature/*]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  AWS_REGION: eu-west-3
+
+jobs:
+  # ==========================================
+  # STAGE 1: TEST & QUALITY
+  # ==========================================
+  test:
+    name: Test & Quality Checks
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_multiserve
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-django pytest-cov pytest-xdist
+          pip install black flake8 isort bandit safety mypy
+
+      # ==========================================
+      # Code Quality Checks
+      # ==========================================
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Check code formatting with black
+        run: black --check --diff .
+
+      - name: Check import sorting with isort
+        run: isort --check-only --diff .
+
+      - name: Type checking with mypy
+        run: mypy . || true
+
+      # ==========================================
+      # Security Scans
+      # ==========================================
+      - name: Security scan with Bandit
+        run: bandit -r . -f json -o bandit-report.json || true
+
+      - name: Dependency vulnerability check with Safety
+        run: safety check --json --output safety-report.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+      # ==========================================
+      # Run Tests
+      # ==========================================
+      - name: Run Django migrations
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/test_multiserve
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-not-for-production
+          DEBUG: True
+        run: python manage.py migrate
+
+      - name: Run tests with pytest
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/test_multiserve
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-not-for-production
+          DEBUG: True
+        run: |
+          pytest --cov=. --cov-report=xml --cov-report=html -v -n auto
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            htmlcov/
+            test-results.xml
+
+  # ==========================================
+  # STAGE 2: BUILD & SCAN
+  # ==========================================
+  build:
+    name: Build & Scan Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # ==========================================
+      # Build Docker Image
+      # ==========================================
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ==========================================
+      # Security Scan - Trivy
+      # ==========================================
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Scan image with Trivy (table output)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+      # ==========================================
+      # Push Docker Image
+      # ==========================================
+      - name: Push image to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+
+  # ==========================================
+  # STAGE 3: DEPLOY TO STAGING
+  # ==========================================
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.multiserve.app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name multiserve-staging --region ${{ env.AWS_REGION }}
+
+      - name: Deploy to Kubernetes (Staging)
+        run: |
+          # Update image tag in kustomization
+          cd k8s/overlays/staging
+          kustomize edit set image multiserve-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
+          # Apply configuration
+          kubectl apply -k .
+          
+          # Wait for rollout
+          kubectl rollout status deployment/multiserve-app -n staging --timeout=300s
+
+      - name: Run smoke tests
+        run: |
+          # Get load balancer URL
+          URL=$(kubectl get svc multiserve-lb -n staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Testing staging environment at: $URL"
+          
+          # Wait for service
+          sleep 30
+          
+          # Health check
+          curl -f http://$URL/health/ || exit 1
+          echo "Staging deployment successful!"
+
+  # ==========================================
+  # STAGE 4: DEPLOY TO PRODUCTION
+  # ==========================================
+  deploy-production:
+    name: Deploy to Production
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://multiserve.app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.0'
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name multiserve-production --region ${{ env.AWS_REGION }}
+
+      - name: Deploy to Kubernetes (Production)
+        run: |
+          # Update image tag
+          cd k8s/overlays/production
+          kustomize edit set image multiserve-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
+          # Apply with record for rollback capability
+          kubectl apply -k . --record
+          
+          # Wait for rollout with extended timeout
+          kubectl rollout status deployment/multiserve-app -n production --timeout=600s
+
+      - name: Verify deployment
+        run: |
+          echo "=== Deployment Status ==="
+          kubectl get pods -n production
+          kubectl get svc -n production
+          kubectl get ingress -n production
+
+      - name: Run production smoke tests
+        run: |
+          # Get load balancer URL
+          URL=$(kubectl get svc multiserve-lb -n production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Testing production environment at: $URL"
+          
+          # Wait for DNS propagation
+          sleep 60
+          
+          # Comprehensive health checks
+          curl -f http://$URL/health/ || exit 1
+          curl -f http://$URL/api/v1/health/ || exit 1
+          
+          # Check response time
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' http://$URL/health/)
+          echo "Response time: ${RESPONSE_TIME}s"
+          
+          if (( $(echo "$RESPONSE_TIME > 2.0" | bc -l) )); then
+            echo "Warning: Response time exceeds 2 seconds"
+          fi
+          
+          echo "Production deployment successful!"
+
+      - name: Setup rollback capability
+        if: failure()
+        run: |
+          echo "Deployment failed. Setting up rollback..."
+          kubectl rollout undo deployment/multiserve-app -n production
+          kubectl rollout status deployment/multiserve-app -n production --timeout=300s
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            Production deployment ${{ job.status }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Message: ${{ github.event.head_commit.message }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ==========================================
+  # NOTIFICATION JOB
+  # ==========================================
+  notify:
+    name: Send Notifications
+    needs: [test, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: "MultiServe CI/CD Pipeline"
+          description: |
+            Test: ${{ needs.test.result }}
+            Build: ${{ needs.build.result }}
+          color: ${{ (needs.test.result == 'success' && needs.build.result == 'success') && '0x00FF00' || '0xFF0000' }}

@@ -1,2 +1,8 @@
-Django
+Django==6.0.3
+gunicorn
 psycopg2-binary
+Pillow
+djangorestframework
+django-cors-headers
+channels
+channels-redis

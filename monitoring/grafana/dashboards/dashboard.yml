@@ -1,0 +1,16 @@
+# ==========================================
+# Grafana Dashboards Provider Configuration
+# ==========================================
+
+apiVersion: 1
+
+providers:
+  - name: 'MultiServe Dashboards'
+    orgId: 1
+    folder: 'MultiServe'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

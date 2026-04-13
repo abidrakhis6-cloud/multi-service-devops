@@ -1,13 +1,365 @@
-from django.shortcuts import render
-from .models import Store, Product
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import Store, Product, Cart, CartItem, Order, Driver, Payment, Message
+
 
 def home(request):
-    category = request.GET.get('category')
-    stores = Store.objects.filter(category=category) if category else Store.objects.all()
-    return render(request, 'home.html', {'stores': stores})
+    return render(request, 'home.html')
 
 
-def store_detail(request, store_id):
-    store = Store.objects.get(id=store_id)
-    products = Product.objects.filter(store=store)
-    return render(request, 'store.html', {'store': store, 'products': products})
+def restaurants(request):
+    stores_data = [
+        {
+            'name': 'KFC',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/KFC_Logo.svg/1200px-KFC_Logo.svg.png',
+            'description': 'Poulet frit croustillant, burgers et buckets',
+            'rating': 4.5,
+            'delivery_time': '25-35 min',
+            'delivery_fee': 2.99
+        },
+        {
+            'name': 'McDonald\'s',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1200px-McDonald%27s_logo.svg.png',
+            'description': 'Burgers, frites, menus Happy Meal et plus',
+            'rating': 4.3,
+            'delivery_time': '20-30 min',
+            'delivery_fee': 1.99
+        },
+        {
+            'name': 'Quick',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Quick_logo.svg/1200px-Quick_logo.svg.png',
+            'description': 'Burgers savoureux et menus gourmands',
+            'rating': 4.2,
+            'delivery_time': '25-35 min',
+            'delivery_fee': 2.49
+        }
+    ]
+    return render(request, 'restaurants.html', {'stores': stores_data})
+
+
+def restaurant_detail(request, name):
+    products_data = {
+        'KFC': [
+            {'name': 'Bucket 8 Tenders', 'price': 15.99, 'image': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400', 'description': '8 tenders croustillants avec 2 sauces au choix'},
+            {'name': 'Twister Original', 'price': 7.49, 'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', 'description': 'Wrap avec tenders, salade, tomate et sauce'},
+            {'name': 'Zinger Burger', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400', 'description': 'Burger poulet piquant avec salade et mayo'},
+            {'name': 'Hot Wings x8', 'price': 8.49, 'image': 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400', 'description': '8 ailes de poulet épicées et croustillantes'},
+            {'name': 'Colonel Original', 'price': 9.99, 'image': 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400', 'description': 'Burger filet de poulet original KFC'},
+            {'name': 'Box Master', 'price': 11.99, 'image': 'https://images.unsplash.com/photo-1619881590738-a111d176d936?w=400', 'description': 'Menu complet avec burger, frites, boisson et dessert'},
+        ],
+        'McDonald\'s': [
+            {'name': 'Big Mac', 'price': 5.79, 'image': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400', 'description': 'Double steak, sauce secrète, salade, fromage'},
+            {'name': 'Happy Meal', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', 'description': 'Menu enfant avec jouet surprise inclus'},
+            {'name': 'McChicken', 'price': 6.29, 'image': 'https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=400', 'description': 'Burger poulet pané avec salade et mayo'},
+            {'name': 'Filet-O-Fish', 'price': 5.49, 'image': 'https://images.unsplash.com/photo-1547584370-2cc98b8b8dc8?w=400', 'description': 'Filet de poque pané avec fromage et tartare'},
+            {'name': '20 McNuggets', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400', 'description': '20 morceaux de poulet pané avec 4 sauces'},
+            {'name': 'McFlurry Oreo', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400', 'description': 'Glace vanille avec morceaux d\'Oreo'},
+        ],
+        'Quick': [
+            {'name': 'Giant Burger', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400', 'description': 'Burger XXL avec double steak et fromage'},
+            {'name': 'Quick N\' Toast', 'price': 6.49, 'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', 'description': 'Sandwich poulet grillé avec sauce spéciale'},
+            {'name': 'Poupan', 'price': 5.99, 'image': 'https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=400', 'description': 'Burger poulet pané signature Quick'},
+            {'name': 'Royal Cheese', 'price': 7.49, 'image': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400', 'description': 'Burger steak fromage avec bacon'},
+            {'name': 'Fish Burger', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1547584370-2cc98b8b8dc8?w=400', 'description': 'Burger poque pané avec sauce tartare'},
+            {'name': 'Menu Enfant', 'price': 5.49, 'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', 'description': 'Menu kids avec jouet et surprise'},
+        ]
+    }
+    
+    store_info = {
+        'KFC': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/KFC_Logo.svg/1200px-KFC_Logo.svg.png', 'rating': 4.5},
+        'McDonald\'s': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/McDonald%27s_logo.svg/1200px-McDonald%27s_logo.svg.png', 'rating': 4.3},
+        'Quick': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Quick_logo.svg/1200px-Quick_logo.svg.png', 'rating': 4.2}
+    }
+    
+    products = products_data.get(name, [])
+    store = store_info.get(name, {})
+    store['name'] = name
+    
+    return render(request, 'restaurant_detail.html', {'store': store, 'products': products})
+
+
+def courses(request):
+    stores_data = [
+        {
+            'name': 'Lidl',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Lidl-Logo.svg/1200px-Lidl-Logo.svg.png',
+            'description': 'Supermarché discount avec produits de qualité',
+            'rating': 4.3,
+            'delivery_time': '30-45 min',
+            'delivery_fee': 1.99
+        },
+        {
+            'name': 'Leclerc',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/E.Leclerc_logo.svg/1200px-E.Leclerc_logo.svg.png',
+            'description': 'Hypermarché avec large choix de produits',
+            'rating': 4.5,
+            'delivery_time': '35-50 min',
+            'delivery_fee': 2.99
+        },
+        {
+            'name': 'Aldi',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aldi_logo.svg/1200px-Aldi_logo.svg.png',
+            'description': 'Supermarché discount européen',
+            'rating': 4.2,
+            'delivery_time': '30-45 min',
+            'delivery_fee': 1.99
+        },
+        {
+            'name': 'Carrefour',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Carrefour_logo.svg/1200px-Carrefour_logo.svg.png',
+            'description': 'Hypermarché international leader mondial',
+            'rating': 4.4,
+            'delivery_time': '35-50 min',
+            'delivery_fee': 2.49
+        },
+        {
+            'name': 'Super U',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Super_U_logo.svg/1200px-Super_U_logo.svg.png',
+            'description': 'Supermarché de proximité français',
+            'rating': 4.3,
+            'delivery_time': '30-45 min',
+            'delivery_fee': 1.99
+        }
+    ]
+    return render(request, 'courses.html', {'stores': stores_data})
+
+
+def courses_detail(request, name):
+    products_data = {
+        'Lidl': [
+            {'name': 'Baguette Tradition', 'price': 0.89, 'image': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400', 'description': 'Baguette française traditionnelle'},
+            {'name': 'Pâtes Barilla 500g', 'price': 1.29, 'image': 'https://images.unsplash.com/photo-1551462147-37885acc36f1?w=400', 'description': 'Pâtes italiennes de qualité supérieure'},
+            {'name': 'Fromage Emmental', 'price': 2.49, 'image': 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=400', 'description': 'Emmental français portion 200g'},
+            {'name': 'Jus d\'Orange 1L', 'price': 1.79, 'image': 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400', 'description': 'Jus d\'orange pressé sans pulpe'},
+            {'name': 'Poulet Entier', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400', 'description': 'Poulet fermier label rouge'},
+            {'name': 'Pack Eau 6x1.5L', 'price': 2.99, 'image': 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400', 'description': 'Eau minérale naturelle'},
+        ],
+        'Leclerc': [
+            {'name': 'Filet Mignon de Porc', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=400', 'description': 'Filet mignon tendre et savoureux 500g'},
+            {'name': 'Saumon Frais', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400', 'description': 'Saumon atlantique frais 400g'},
+            {'name': 'Fromage de Chèvre', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=400', 'description': 'Fromage de chèvre affiné 200g'},
+            {'name': 'Champagne Moët', 'price': 45.99, 'image': 'https://images.unsplash.com/photo-1594147477472-705e1e221d28?w=400', 'description': 'Champagne brut impérial 75cl'},
+            {'name': 'Café Grain 250g', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400', 'description': 'Café en grains arabica premium'},
+            {'name': 'Huile d\'Olive 1L', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', 'description': 'Huile d\'olive extra vierge bio'},
+        ],
+        'Aldi': [
+            {'name': 'Lait Entier 1L', 'price': 0.99, 'image': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400', 'description': 'Lait entier UHT de qualité'},
+            {'name': 'Céréales Miel', 'price': 2.19, 'image': 'https://images.unsplash.com/photo-1517093725432-a9ac0b8f9d8f?w=400', 'description': 'Céréales au miel croquantes'},
+            {'name': 'Pommes Golden 1kg', 'price': 2.49, 'image': 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400', 'description': 'Pommes golden délicieuses'},
+            {'name': 'Poulet Rôti', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400', 'description': 'Poulet rôti prêt à déguster'},
+            {'name': 'Yogourt Nature x4', 'price': 1.79, 'image': 'https://images.unsplash.com/photo-1488477181946-6428a029177b?w=400', 'description': 'Yogourt nature onctueux'},
+            {'name': 'Pain de Mie', 'price': 1.29, 'image': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400', 'description': 'Pain de mie moelleux'},
+        ],
+        'Carrefour': [
+            {'name': 'Foie Gras 90g', 'price': 18.99, 'image': 'https://images.unsplash.com/photo-1604579278540-b475412fb7ab?w=400', 'description': 'Foie gras de canard mi-cuit'},
+            {'name': 'Caviar 30g', 'price': 89.99, 'image': 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=400', 'description': 'Caviar d\'esturgeon français'},
+            {'name': 'Homard Breton', 'price': 24.99, 'image': 'https://images.unsplash.com/photo-1553659971-f01207815844?w=400', 'description': 'Homard breton vivant 600g'},
+            {'name': 'Truffe Noire 50g', 'price': 65.99, 'image': 'https://images.unsplash.com/photo-1604579278540-b475412fb7ab?w=400', 'description': 'Truffe noire du Périgord'},
+            {'name': 'Jambon Bellota', 'price': 89.99, 'image': 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400', 'description': 'Jambon ibérique pata negra'},
+            {'name': 'Vin Bordeaux 2015', 'price': 35.99, 'image': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400', 'description': 'Château Margaux grand cru'},
+        ],
+        'Super U': [
+            {'name': 'Comté 12 Mois', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=400', 'description': 'Comté AOP affiné 12 mois'},
+            {'name': 'Saucisson Sec', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400', 'description': 'Saucisson sec artisanal 200g'},
+            {'name': 'Miel de Lavande', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400', 'description': 'Miel de lavande de Provance 500g'},
+            {'name': 'Confiture Fraise', 'price': 3.29, 'image': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400', 'description': 'Confiture de fraises de saison'},
+            {'name': 'Madeleines x12', 'price': 2.79, 'image': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400', 'description': 'Madeleines traditionnelles françaises'},
+            {'name': 'Cidre Brut', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=400', 'description': 'Cidre brut artisanal 75cl'},
+        ]
+    }
+    
+    store_info = {
+        'Lidl': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Lidl-Logo.svg/1200px-Lidl-Logo.svg.png', 'rating': 4.3},
+        'Leclerc': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/E.Leclerc_logo.svg/1200px-E.Leclerc_logo.svg.png', 'rating': 4.5},
+        'Aldi': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aldi_logo.svg/1200px-Aldi_logo.svg.png', 'rating': 4.2},
+        'Carrefour': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Carrefour_logo.svg/1200px-Carrefour_logo.svg.png', 'rating': 4.4},
+        'Super U': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Super_U_logo.svg/1200px-Super_U_logo.svg.png', 'rating': 4.3}
+    }
+    
+    products = products_data.get(name, [])
+    store = store_info.get(name, {})
+    store['name'] = name
+    
+    return render(request, 'courses_detail.html', {'store': store, 'products': products})
+
+
+def boutiques(request):
+    stores_data = [
+        {
+            'name': 'Apple Store',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png',
+            'description': 'iPhone, MacBook, iPad, Apple Watch et accessoires',
+            'rating': 4.8,
+            'delivery_time': '20-30 min',
+            'delivery_fee': 0.00
+        },
+        {
+            'name': 'Dior',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Dior_Logo.svg/1200px-Dior_Logo.svg.png',
+            'description': 'Mode luxe, chaussures, t-shirts, pantalons',
+            'rating': 4.9,
+            'delivery_time': '25-35 min',
+            'delivery_fee': 5.99
+        },
+        {
+            'name': 'Chanel',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Chanel_logo.svg/1200px-Chanel_logo.svg.png',
+            'description': 'Parfums, maquillage, sacs de luxe',
+            'rating': 4.9,
+            'delivery_time': '25-35 min',
+            'delivery_fee': 5.99
+        },
+        {
+            'name': 'Louis Vuitton',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Louis_Vuitton_logo.svg/1200px-Louis_Vuitton_logo.svg.png',
+            'description': 'Maroquinerie de luxe, sacs, bagages',
+            'rating': 4.8,
+            'delivery_time': '25-35 min',
+            'delivery_fee': 5.99
+        }
+    ]
+    return render(request, 'boutiques.html', {'stores': stores_data})
+
+
+def boutique_detail(request, name):
+    products_data = {
+        'Apple Store': [
+            {'name': 'iPhone 15 Pro Max', 'price': 1479.00, 'image': 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=400', 'description': '256GB - Titane Naturel - Puce A17 Pro'},
+            {'name': 'MacBook Air M3', 'price': 1299.00, 'image': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400', 'description': '13 pouces 256GB SSD - Puce M3'},
+            {'name': 'iPad Pro 12.9"', 'price': 1249.00, 'image': 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400', 'description': 'M2 128GB WiFi - Écran Liquid Retina XDR'},
+            {'name': 'Apple Watch Ultra 2', 'price': 899.00, 'image': 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400', 'description': 'GPS + Cellular 49mm - Titane'},
+            {'name': 'AirPods Pro 2', 'price': 279.00, 'image': 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400', 'description': 'Réduction active du bruit - USB-C'},
+            {'name': 'Magic Keyboard', 'price': 119.00, 'image': 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400', 'description': 'Clavier sans fil rechargeable - Gris sidéral'},
+        ],
+        'Dior': [
+            {'name': 'Sneakers B23', 'price': 950.00, 'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', 'description': 'Sneakers haut de gamme toile oblique'},
+            {'name': 'T-Shirt Logo', 'price': 590.00, 'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', 'description': 'Coton bio avec logo brodé'},
+            {'name': 'Pantalon Tailleur', 'price': 1290.00, 'image': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400', 'description': 'Laine vierge italienne - Coupe slim'},
+            {'name': 'Sac Lady Dior', 'price': 4900.00, 'image': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400', 'description': 'Cuir d\'agneau cannage - Moyen modèle'},
+            {'name': 'Ceinture CD', 'price': 650.00, 'image': 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=400', 'description': 'Cuir de veau réversible'},
+            {'name': 'Lunettes Dior', 'price': 420.00, 'image': 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400', 'description': 'Monture or 18K - Verres polarisés'},
+        ],
+        'Chanel': [
+            {'name': 'Chanel N°5', 'price': 135.00, 'image': 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400', 'description': 'Eau de parfum 100ml - Légendaire'},
+            {'name': 'Coco Mademoiselle', 'price': 115.00, 'image': 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400', 'description': 'Eau de toilette 50ml - Oriental frais'},
+            {'name': 'Rouge Allure', 'price': 42.00, 'image': 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400', 'description': 'Rouge à lèvres velours - 99 Pirate'},
+            {'name': 'Sac Classic Flap', 'price': 8900.00, 'image': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400', 'description': 'Cuir d\'agneau matelassé noir'},
+            {'name': 'Vernis Gel', 'price': 28.00, 'image': 'https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?w=400', 'description': 'Vernis à ongles longue tenue'},
+            {'name': 'Chance Chanel', 'price': 105.00, 'image': 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400', 'description': 'Eau de toilette 50ml - Floral pétillant'},
+        ],
+        'Louis Vuitton': [
+            {'name': 'Neverfull MM', 'price': 1750.00, 'image': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400', 'description': 'Toile monogram classique'},
+            {'name': 'Keepall 55', 'price': 2150.00, 'image': 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400', 'description': 'Sac de voyage toile monogram'},
+            {'name': 'Portefeuille Zippy', 'price': 595.00, 'image': 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=400', 'description': 'Cuir épi - Fermeture zippée'},
+            {'name': 'Ceinture LV Initiales', 'price': 495.00, 'image': 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=400', 'description': 'Cuir et toile monogram réversible'},
+            {'name': 'Écharpe Monogram', 'price': 425.00, 'image': 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=400', 'description': 'Laine et soie - Noir et gris'},
+            {'name': 'Lunettes Aviator', 'price': 580.00, 'image': 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400', 'description': 'Monture métal doré - Verres dégradés'},
+        ]
+    }
+    
+    store_info = {
+        'Apple Store': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png', 'rating': 4.8},
+        'Dior': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Dior_Logo.svg/1200px-Dior_Logo.svg.png', 'rating': 4.9},
+        'Chanel': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Chanel_logo.svg/1200px-Chanel_logo.svg.png', 'rating': 4.9},
+        'Louis Vuitton': {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Louis_Vuitton_logo.svg/1200px-Louis_Vuitton_logo.svg.png', 'rating': 4.8}
+    }
+    
+    products = products_data.get(name, [])
+    store = store_info.get(name, {})
+    store['name'] = name
+    
+    return render(request, 'boutique_detail.html', {'store': store, 'products': products})
+
+
+def pharmacie(request):
+    stores_data = [
+        {
+            'name': 'Pharmacie Centrale',
+            'image': 'https://cdn-icons-png.flaticon.com/512/4320/4320337.png',
+            'description': 'Médicaments sur ordonnance et sans ordonnance',
+            'rating': 4.7,
+            'delivery_time': '15-25 min',
+            'delivery_fee': 1.99
+        },
+        {
+            'name': 'Parapharmacie Beauté',
+            'image': 'https://cdn-icons-png.flaticon.com/512/1005/1005141.png',
+            'description': 'Produits de beauté, soins et cosmétiques',
+            'rating': 4.6,
+            'delivery_time': '20-30 min',
+            'delivery_fee': 1.99
+        }
+    ]
+    return render(request, 'pharmacie.html', {'stores': stores_data})
+
+
+def pharmacie_detail(request, name):
+    products_data = {
+        'Pharmacie Centrale': [
+            {'name': 'Doliprane 1000mg', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Paracétamol - 8 comprimés - Douleurs et fièvre'},
+            {'name': 'Advil 400mg', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Ibuprofène - 20 comprimés - Anti-inflammatoire'},
+            {'name': 'Strepsils', 'price': 5.29, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Pastilles pour la gorge - Miel citron'},
+            {'name': 'Vitamine C 1000mg', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': '60 comprimés effervescents - Immunité'},
+            {'name': 'Bandages Assortis', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Boîte de 40 pansements multi-tailles'},
+            {'name': 'Thermomètre Digital', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Mesure rapide en 10 secondes'},
+            {'name': 'Désinfectant Mains', 'price': 3.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Gel hydroalcoolique 500ml'},
+            {'name': 'Antihistaminique', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Cetirizine 10mg - Allergies saisonnières'},
+        ],
+        'Parapharmacie Beauté': [
+            {'name': 'Crème Hydratante Nivea', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400', 'description': 'Pot 400ml - Peaux sensibles'},
+            {'name': 'Sérum Visage', 'price': 24.99, 'image': 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400', 'description': 'Acide hyaluronique - 30ml - Anti-âge'},
+            {'name': 'Masque Cheveux', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400', 'description': 'Kératin repair - Cheveux abîmés'},
+            {'name': 'Dentifrice Blancheur', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1559671088-795c814b9a4e?w=400', 'description': 'Colgate - 3x75ml - Action blancheur'},
+            {'name': 'Déodorant 48h', 'price': 3.99, 'image': 'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=400', 'description': 'Dove - Sans alcool - Invisible'},
+            {'name': 'Shampooing Doux', 'price': 5.99, 'image': 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=400', 'description': 'Klorane - Usage quotidien 400ml'},
+            {'name': 'Huile Corps Bio', 'price': 14.99, 'image': 'https://images.unsplash.com/photo-1608248597279-f99d160bfbc8?w=400', 'description': 'Argan bio - Hydratation intense 100ml'},
+            {'name': 'Rouge à Lèvres', 'price': 18.99, 'image': 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400', 'description': 'Maybelline Super Stay - Tenue 24h'},
+        ]
+    }
+    
+    store_info = {
+        'Pharmacie Centrale': {'image': 'https://cdn-icons-png.flaticon.com/512/4320/4320337.png', 'rating': 4.7},
+        'Parapharmacie Beauté': {'image': 'https://cdn-icons-png.flaticon.com/512/1005/1005141.png', 'rating': 4.6}
+    }
+    
+    products = products_data.get(name, [])
+    store = store_info.get(name, {})
+    store['name'] = name
+    
+    return render(request, 'pharmacie_detail.html', {'store': store, 'products': products})
+
+
+def livraison(request):
+    return render(request, 'livraison.html')
+
+
+def cart_view(request):
+    return render(request, 'cart.html')
+
+
+def checkout_view(request):
+    return render(request, 'checkout.html')
+
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'Identifiants invalides')
+    return render(request, 'login.html')
+
+
+def user_logout(request):
+    logout(request)
+    return redirect('home')
+
+
+def register(request):
+    return render(request, 'register.html')
