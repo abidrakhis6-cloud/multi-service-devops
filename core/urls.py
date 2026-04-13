@@ -17,4 +17,9 @@ urlpatterns = [
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.register, name='register'),
+    # API endpoints
+    path('api/send-sms/', views.send_sms_api, name='send_sms'),
+    path('api/send-verification-sms/', views.send_verification_sms, name='send_verification_sms'),
+    path('api/make-call/', views.make_call_api, name='make_call'),
+    path('api/health/', views.health_check, name='health'),
 ]

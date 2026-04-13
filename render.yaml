@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: multiserve
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "localhost,127.0.0.1,.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: multiserve-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: multiserve-redis
+          property: connectionString
+    healthCheckPath: /api/health/
+
+  - type: redis
+    name: multiserve-redis
+    ipAllowList: []
+
+databases:
+  - name: multiserve-db
+    databaseName: multiserve
+    user: multiserve
+    plan: free

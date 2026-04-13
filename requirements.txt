@@ -6,3 +6,6 @@ djangorestframework
 django-cors-headers
 channels
 channels-redis
+dj-database-url
+whitenoise
+python-decouple

@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from datetime import datetime
 from .models import Store, Product, Cart, CartItem, Order, Driver, Payment, Message
 
 
@@ -47,7 +48,7 @@ def restaurant_detail(request, name):
             {'name': 'Zinger Burger', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400', 'description': 'Burger poulet piquant avec salade et mayo'},
             {'name': 'Hot Wings x8', 'price': 8.49, 'image': 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400', 'description': '8 ailes de poulet épicées et croustillantes'},
             {'name': 'Colonel Original', 'price': 9.99, 'image': 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400', 'description': 'Burger filet de poulet original KFC'},
-            {'name': 'Box Master', 'price': 11.99, 'image': 'https://images.unsplash.com/photo-1619881590738-a111d176d936?w=400', 'description': 'Menu complet avec burger, frites, boisson et dessert'},
+            {'name': 'Box Master', 'price': 11.99, 'image': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', 'description': 'Menu complet avec burger, frites, boisson et dessert'},
         ],
         'McDonald\'s': [
             {'name': 'Big Mac', 'price': 5.79, 'image': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400', 'description': 'Double steak, sauce secrète, salade, fromage'},
@@ -140,23 +141,23 @@ def courses_detail(request, name):
             {'name': 'Filet Mignon de Porc', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=400', 'description': 'Filet mignon tendre et savoureux 500g'},
             {'name': 'Saumon Frais', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400', 'description': 'Saumon atlantique frais 400g'},
             {'name': 'Fromage de Chèvre', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=400', 'description': 'Fromage de chèvre affiné 200g'},
-            {'name': 'Champagne Moët', 'price': 45.99, 'image': 'https://images.unsplash.com/photo-1594147477472-705e1e221d28?w=400', 'description': 'Champagne brut impérial 75cl'},
+            {'name': 'Champagne Moët', 'price': 45.99, 'image': 'https://images.unsplash.com/photo-1572566424406-4e955c4a211b?w=400', 'description': 'Champagne brut impérial 75cl'},
             {'name': 'Café Grain 250g', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400', 'description': 'Café en grains arabica premium'},
             {'name': 'Huile d\'Olive 1L', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', 'description': 'Huile d\'olive extra vierge bio'},
         ],
         'Aldi': [
             {'name': 'Lait Entier 1L', 'price': 0.99, 'image': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400', 'description': 'Lait entier UHT de qualité'},
-            {'name': 'Céréales Miel', 'price': 2.19, 'image': 'https://images.unsplash.com/photo-1517093725432-a9ac0b8f9d8f?w=400', 'description': 'Céréales au miel croquantes'},
+            {'name': 'Céréales Miel', 'price': 2.19, 'image': 'https://images.unsplash.com/photo-1495214783159-3503fd1b572d?w=400', 'description': 'Céréales au miel croquantes'},
             {'name': 'Pommes Golden 1kg', 'price': 2.49, 'image': 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400', 'description': 'Pommes golden délicieuses'},
             {'name': 'Poulet Rôti', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400', 'description': 'Poulet rôti prêt à déguster'},
-            {'name': 'Yogourt Nature x4', 'price': 1.79, 'image': 'https://images.unsplash.com/photo-1488477181946-6428a029177b?w=400', 'description': 'Yogourt nature onctueux'},
+            {'name': 'Yogourt Nature x4', 'price': 1.79, 'image': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400', 'description': 'Yogourt nature onctueux'},
             {'name': 'Pain de Mie', 'price': 1.29, 'image': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400', 'description': 'Pain de mie moelleux'},
         ],
         'Carrefour': [
-            {'name': 'Foie Gras 90g', 'price': 18.99, 'image': 'https://images.unsplash.com/photo-1604579278540-b475412fb7ab?w=400', 'description': 'Foie gras de canard mi-cuit'},
+            {'name': 'Foie Gras 90g', 'price': 18.99, 'image': 'https://images.unsplash.com/photo-1567620904195-4724f6c84539?w=400', 'description': 'Foie gras de canard mi-cuit'},
             {'name': 'Caviar 30g', 'price': 89.99, 'image': 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=400', 'description': 'Caviar d\'esturgeon français'},
             {'name': 'Homard Breton', 'price': 24.99, 'image': 'https://images.unsplash.com/photo-1553659971-f01207815844?w=400', 'description': 'Homard breton vivant 600g'},
-            {'name': 'Truffe Noire 50g', 'price': 65.99, 'image': 'https://images.unsplash.com/photo-1604579278540-b475412fb7ab?w=400', 'description': 'Truffe noire du Périgord'},
+            {'name': 'Truffe Noire 50g', 'price': 65.99, 'image': 'https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=400', 'description': 'Truffe noire du Périgord'},
             {'name': 'Jambon Bellota', 'price': 89.99, 'image': 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400', 'description': 'Jambon ibérique pata negra'},
             {'name': 'Vin Bordeaux 2015', 'price': 35.99, 'image': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400', 'description': 'Château Margaux grand cru'},
         ],
@@ -299,13 +300,13 @@ def pharmacie_detail(request, name):
     products_data = {
         'Pharmacie Centrale': [
             {'name': 'Doliprane 1000mg', 'price': 3.49, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Paracétamol - 8 comprimés - Douleurs et fièvre'},
-            {'name': 'Advil 400mg', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Ibuprofène - 20 comprimés - Anti-inflammatoire'},
-            {'name': 'Strepsils', 'price': 5.29, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Pastilles pour la gorge - Miel citron'},
-            {'name': 'Vitamine C 1000mg', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': '60 comprimés effervescents - Immunité'},
-            {'name': 'Bandages Assortis', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Boîte de 40 pansements multi-tailles'},
-            {'name': 'Thermomètre Digital', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Mesure rapide en 10 secondes'},
-            {'name': 'Désinfectant Mains', 'price': 3.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Gel hydroalcoolique 500ml'},
-            {'name': 'Antihistaminique', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'description': 'Cetirizine 10mg - Allergies saisonnières'},
+            {'name': 'Advil 400mg', 'price': 4.99, 'image': 'https://images.unsplash.com/photo-1626285861696-9f0bf5a49bd6?w=400', 'description': 'Ibuprofène - 20 comprimés - Anti-inflammatoire'},
+            {'name': 'Strepsils', 'price': 5.29, 'image': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400', 'description': 'Pastilles pour la gorge - Miel citron'},
+            {'name': 'Vitamine C 1000mg', 'price': 8.99, 'image': 'https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=400', 'description': '60 comprimés effervescents - Immunité'},
+            {'name': 'Bandages Assortis', 'price': 4.49, 'image': 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=400', 'description': 'Boîte de 40 pansements multi-tailles'},
+            {'name': 'Thermomètre Digital', 'price': 12.99, 'image': 'https://images.unsplash.com/photo-1631217868264-d4bb000b0e33?w=400', 'description': 'Mesure rapide en 10 secondes'},
+            {'name': 'Désinfectant Mains', 'price': 3.99, 'image': 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400', 'description': 'Gel hydroalcoolique 500ml'},
+            {'name': 'Antihistaminique', 'price': 6.99, 'image': 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=400', 'description': 'Cetirizine 10mg - Allergies saisonnières'},
         ],
         'Parapharmacie Beauté': [
             {'name': 'Crème Hydratante Nivea', 'price': 7.99, 'image': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400', 'description': 'Pot 400ml - Peaux sensibles'},
@@ -363,3 +364,109 @@ def user_logout(request):
 
 def register(request):
     return render(request, 'register.html')
+
+
+# API Views for SMS and Voice
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def send_sms_api(request):
+    """API endpoint to send SMS to driver/customer"""
+    try:
+        data = json.loads(request.body)
+        to = data.get('to')
+        message = data.get('message')
+        driver_id = data.get('driver_id', 'unknown')
+        
+        # In production, integrate with Twilio, Vonage, or other SMS provider
+        # Example with Twilio:
+        # from twilio.rest import Client
+        # client = Client(account_sid, auth_token)
+        # message = client.messages.create(
+        #     body=message,
+        #     from_='+1234567890',
+        #     to=f'+33{to}'
+        # )
+        
+        print(f"[SMS] To: {to}, Message: {message}, Driver: {driver_id}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'SMS sent successfully',
+            'to': to,
+            'timestamp': str(datetime.now())
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def send_verification_sms(request):
+    """API endpoint to send verification code SMS"""
+    try:
+        data = json.loads(request.body)
+        phone = data.get('phone')
+        code = data.get('code')
+        
+        message = f"Votre code de vérification MultiServe est: {code}. Valide pendant 10 minutes."
+        
+        # In production, send actual SMS
+        print(f"[VERIFICATION SMS] To: {phone}, Code: {code}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Verification code sent',
+            'phone': phone,
+            'timestamp': str(datetime.now())
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def make_call_api(request):
+    """API endpoint to initiate voice call between two people"""
+    try:
+        data = json.loads(request.body)
+        from_number = data.get('from')
+        to_number = data.get('to')
+        user_type = data.get('user_type', 'customer')  # 'customer' or 'driver'
+        
+        # In production, integrate with Twilio Voice or similar
+        # This would create a conference call or connect two parties
+        
+        print(f"[VOICE CALL] From: {from_number}, To: {to_number}, Type: {user_type}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Call initiated',
+            'call_id': f'call_{datetime.now().strftime("%Y%m%d%H%M%S")}',
+            'status': 'ringing',
+            'timestamp': str(datetime.now())
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+def health_check(request):
+    """Health check endpoint for monitoring"""
+    return JsonResponse({
+        'status': 'healthy',
+        'timestamp': str(datetime.now()),
+        'service': 'multiserve-app'
+    })
