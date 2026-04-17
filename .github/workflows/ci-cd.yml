@@ -81,34 +81,56 @@ jobs:
       run: |
         docker run --rm multiserve:${{ github.sha }} python --version
 
-  deploy-staging:
-    runs-on: ubuntu-latest
-    needs: [test, build]
-    if: github.ref == 'refs/heads/develop'
-    environment:
-      name: staging
-      url: https://staging-multiserve.onrender.com
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Deploy to Staging
-      run: |
-        echo "Deploying to Staging environment..."
-        # Add Render deployment command here if needed
-        
-  deploy-production:
+  deploy-aws:
     runs-on: ubuntu-latest
     needs: [test, build]
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-      url: https://multiserve.onrender.com
+      url: https://multiserve.example.com
+    
+    env:
+      AWS_REGION: eu-west-3
+      ECR_REPOSITORY: multiserve
+      ECS_CLUSTER: multiserve-cluster
+      ECS_SERVICE: multiserve-service
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Deploy to Production
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "Deploying to Production environment..."
-        # Add Render deployment command here if needed
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+    
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ecs-task-definition.json
+        container-name: multiserve
+        image: ${{ steps.build-image.outputs.image }}
+    
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true

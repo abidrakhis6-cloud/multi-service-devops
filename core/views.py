@@ -440,6 +440,34 @@ def bank_setup(request):
     return render(request, 'bank_setup.html')
 
 
+def user_registration(request):
+    """User registration with S3 storage"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+        
+        if name and email:
+            try:
+                from .s3_storage import s3_storage
+                result = s3_storage.save_user_data(name, email, message)
+                
+                if result['success']:
+                    messages.success(request, f"Inscription réussie ! Vos données ont été enregistrées (ID: {result['user_id'][:8]}...)")
+                else:
+                    messages.error(request, f"Erreur lors de l'enregistrement: {result['error']}")
+                    messages.info(request, "Données sauvegardées localement.")
+            except Exception as e:
+                messages.error(request, f"Erreur S3: {str(e)}")
+                messages.info(request, "Vérifiez la configuration AWS.")
+        else:
+            messages.error(request, "Nom et email sont obligatoires.")
+        
+        return redirect('user_registration')
+    
+    return render(request, 'registration_form.html')
+
+
 # API Views for SMS and Voice
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt

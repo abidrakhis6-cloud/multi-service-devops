@@ -18,6 +18,7 @@ urlpatterns = [
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.register, name='register'),
+    path('register-user/', views.user_registration, name='user_registration'),
     # Invoice & Bank Setup
     path('invoice/<int:invoice_id>/', stripe_views.get_invoice_pdf, name='invoice_pdf'),
     path('bank-setup/', views.bank_setup, name='bank_setup'),
