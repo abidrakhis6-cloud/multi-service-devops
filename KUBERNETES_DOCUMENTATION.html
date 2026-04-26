@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>KUBERNETES_DOCUMENTATION</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#documentation-kubernetes---multiserve"
+id="toc-documentation-kubernetes---multiserve">Documentation Kubernetes
+- MultiServe</a>
+<ul>
+<li><a href="#table-des-matières" id="toc-table-des-matières">Table des
+matières</a></li>
+<li><a href="#introduction" id="toc-introduction">Introduction</a>
+<ul>
+<li><a href="#objectifs" id="toc-objectifs">Objectifs</a></li>
+</ul></li>
+<li><a href="#architecture-kubernetes"
+id="toc-architecture-kubernetes">Architecture Kubernetes</a></li>
+<li><a href="#composants-kubernetes"
+id="toc-composants-kubernetes">Composants Kubernetes</a>
+<ul>
+<li><a href="#namespace" id="toc-namespace">Namespace</a></li>
+<li><a href="#deployment" id="toc-deployment">Deployment</a></li>
+<li><a href="#service" id="toc-service">Service</a></li>
+<li><a href="#horizontal-pod-autoscaler-hpa"
+id="toc-horizontal-pod-autoscaler-hpa">Horizontal Pod Autoscaler
+(HPA)</a></li>
+<li><a href="#ingress" id="toc-ingress">Ingress</a></li>
+<li><a href="#configmap" id="toc-configmap">ConfigMap</a></li>
+<li><a href="#secret" id="toc-secret">Secret</a></li>
+<li><a href="#persistentvolumeclaim-pvc"
+id="toc-persistentvolumeclaim-pvc">PersistentVolumeClaim (PVC)</a></li>
+<li><a href="#serviceaccount"
+id="toc-serviceaccount">ServiceAccount</a></li>
+<li><a href="#networkpolicy"
+id="toc-networkpolicy">NetworkPolicy</a></li>
+<li><a href="#postgresql" id="toc-postgresql">PostgreSQL</a></li>
+<li><a href="#redis" id="toc-redis">Redis</a></li>
+<li><a href="#servicemonitor"
+id="toc-servicemonitor">ServiceMonitor</a></li>
+</ul></li>
+<li><a href="#déploiement" id="toc-déploiement">Déploiement</a>
+<ul>
+<li><a href="#prérequis" id="toc-prérequis">Prérequis</a></li>
+<li><a href="#déploiement-sur-eks"
+id="toc-déploiement-sur-eks">Déploiement sur EKS</a></li>
+<li><a href="#déploiement-avec-overlay-stagingproduction"
+id="toc-déploiement-avec-overlay-stagingproduction">Déploiement avec
+overlay (staging/production)</a></li>
+</ul></li>
+<li><a href="#monitoring-avec-prometheus"
+id="toc-monitoring-avec-prometheus">Monitoring avec Prometheus</a>
+<ul>
+<li><a href="#architecture-monitoring"
+id="toc-architecture-monitoring">Architecture Monitoring</a></li>
+<li><a href="#métriques-exposées" id="toc-métriques-exposées">Métriques
+exposées</a></li>
+<li><a href="#dashboards-grafana" id="toc-dashboards-grafana">Dashboards
+Grafana</a></li>
+</ul></li>
+<li><a href="#sécurité" id="toc-sécurité">Sécurité</a>
+<ul>
+<li><a href="#network-policies" id="toc-network-policies">1. Network
+Policies</a></li>
+<li><a href="#secrets-management" id="toc-secrets-management">2. Secrets
+Management</a></li>
+<li><a href="#container-security" id="toc-container-security">3.
+Container Security</a></li>
+<li><a href="#ingress-security" id="toc-ingress-security">4. Ingress
+Security</a></li>
+<li><a href="#pod-security" id="toc-pod-security">5. Pod
+Security</a></li>
+</ul></li>
+<li><a href="#scalabilité" id="toc-scalabilité">Scalabilité</a>
+<ul>
+<li><a href="#horizontal-pod-autoscaler-hpa-1"
+id="toc-horizontal-pod-autoscaler-hpa-1">Horizontal Pod Autoscaler
+(HPA)</a></li>
+<li><a href="#vertical-pod-autoscaler-vpa"
+id="toc-vertical-pod-autoscaler-vpa">Vertical Pod Autoscaler
+(VPA)</a></li>
+<li><a href="#cluster-autoscaler" id="toc-cluster-autoscaler">Cluster
+Autoscaler</a></li>
+</ul></li>
+<li><a href="#commandes-utiles" id="toc-commandes-utiles">Commandes
+utiles</a>
+<ul>
+<li><a href="#déploiement-1" id="toc-déploiement-1">Déploiement</a></li>
+<li><a href="#debug" id="toc-debug">Debug</a></li>
+<li><a href="#scaling" id="toc-scaling">Scaling</a></li>
+<li><a href="#monitoring" id="toc-monitoring">Monitoring</a></li>
+<li><a href="#rollback" id="toc-rollback">Rollback</a></li>
+<li><a href="#nettoyage" id="toc-nettoyage">Nettoyage</a></li>
+</ul></li>
+<li><a href="#schéma-darchitecture" id="toc-schéma-darchitecture">Schéma
+d’architecture</a>
+<ul>
+<li><a href="#vue-détaillée" id="toc-vue-détaillée">Vue
+détaillée</a></li>
+<li><a href="#flux-de-requête" id="toc-flux-de-requête">Flux de
+requête</a></li>
+</ul></li>
+<li><a href="#conclusion" id="toc-conclusion">Conclusion</a></li>
+<li><a href="#annexes" id="toc-annexes">Annexes</a>
+<ul>
+<li><a href="#fichiers-kubernetes" id="toc-fichiers-kubernetes">Fichiers
+Kubernetes</a></li>
+<li><a href="#liens-utiles" id="toc-liens-utiles">Liens utiles</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="documentation-kubernetes---multiserve">Documentation Kubernetes
+- MultiServe</h1>
+<p><strong>Auteur :</strong> Abid RAKHIS AHMAT<br />
+<strong>Date :</strong> 23 Avril 2026<br />
+<strong>Projet :</strong> Multi-Service DevOps - Application Django
+Multi-Services<br />
+<strong>Cluster :</strong> AWS EKS (Elastic Kubernetes Service)</p>
+<hr />
+<h2 id="table-des-matières">Table des matières</h2>
+<ol type="1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#architecture-kubernetes">Architecture Kubernetes</a></li>
+<li><a href="#composants-kubernetes">Composants Kubernetes</a></li>
+<li><a href="#manifests-kubernetes">Manifests Kubernetes</a></li>
+<li><a href="#déploiement">Déploiement</a></li>
+<li><a href="#monitoring-avec-prometheus">Monitoring avec
+Prometheus</a></li>
+<li><a href="#sécurité">Sécurité</a></li>
+<li><a href="#scalabilité">Scalabilité</a></li>
+<li><a href="#commandes-utiles">Commandes utiles</a></li>
+<li><a href="#schéma-darchitecture">Schéma d’architecture</a></li>
+</ol>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>Ce document décrit l’architecture Kubernetes complète de
+l’application MultiServe, une application Django multi-services
+(pharmacie, banque, chat) déployée sur AWS EKS.</p>
+<h3 id="objectifs">Objectifs</h3>
+<ul>
+<li>Déploiement containerisé avec Kubernetes</li>
+<li>Scalabilité automatique (HPA)</li>
+<li>Monitoring avec Prometheus et Grafana</li>
+<li>Sécurité renforcée (Network Policies, Secrets)</li>
+<li>Haute disponibilité (3 replicas, anti-affinity)</li>
+</ul>
+<hr />
+<h2 id="architecture-kubernetes">Architecture Kubernetes</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                     Internet / Utilisateurs                   │
+└─────────────────────────────┬───────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  AWS Load Balancer (ALB)                      │
+└─────────────────────────────┬───────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Ingress Controller (NGINX)                  │
+│              - SSL/TLS termination                           │
+│              - Rate limiting                                 │
+│              - Routing basé sur l&#39;hôte                        │
+└─────────────────────────────┬───────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│              MultiServe Application (Django)                 │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
+│  │  Pod 1   │  │  Pod 2   │  │  Pod 3   │                   │
+│  │  (App)   │  │  (App)   │  │  (App)   │                   │
+│  └──────────┘  └──────────┘  └──────────┘                   │
+│         │              │              │                      │
+│         └──────────────┴──────────────┘                      │
+│                        │                                       │
+│         ┌──────────────┴──────────────┐                       │
+│         ▼                              ▼                       │
+│  ┌──────────────┐           ┌──────────────┐                 │
+│  │ PostgreSQL    │           │    Redis     │                 │
+│  │  (StatefulSet)│           │ (StatefulSet)│                 │
+│  └──────────────┘           └──────────────┘                 │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Monitoring Stack                           │
+│  ┌──────────────┐           ┌──────────────┐                 │
+│  │  Prometheus  │◄──────────│ ServiceMonitor│                 │
+│  └──────────────┘           └──────────────┘                 │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌──────────────┐                                           │
+│  │   Grafana    │                                           │
+│  └──────────────┘                                           │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 id="composants-kubernetes">Composants Kubernetes</h2>
+<h3 id="namespace">Namespace</h3>
+<p><strong>Fichier :</strong> <code>namespace.yaml</code></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Namespace</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> multiserve</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">labels</span><span class="kw">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> multiserve</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span><span class="at"> production</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">istio-injection</span><span class="kw">:</span><span class="at"> enabled</span></span></code></pre></div>
+<p><strong>Description :</strong> - Isolation logique des ressources -
+Labels pour l’organisation - Istio injection activé pour le service
+mesh</p>
+<hr />
+<h3 id="deployment">Deployment</h3>
+<p><strong>Fichier :</strong> <code>deployment.yaml</code></p>
+<p><strong>Caractéristiques :</strong> - <strong>Replicas :</strong> 3
+(haute disponibilité) - <strong>Strategy :</strong> RollingUpdate
+(déploiement sans interruption) - <strong>Ressources :</strong> -
+Requests : 256Mi RAM, 250m CPU - Limits : 512Mi RAM, 500m CPU -
+<strong>Probes :</strong> - Liveness probe : <code>/health/</code>
+(vérifie si le pod est vivant) - Readiness probe : <code>/health/</code>
+(vérifie si le pod est prêt) - <strong>Sécurité :</strong> -
+runAsNonRoot : true - readOnlyRootFilesystem : true - Capabilities : ALL
+dropped - <strong>Anti-affinity :</strong> Distribution sur différents
+nœuds</p>
+<hr />
+<h3 id="service">Service</h3>
+<p><strong>Fichier :</strong> <code>service.yaml</code></p>
+<p><strong>Types :</strong> 1. <strong>ClusterIP</strong> :
+Communication interne entre pods 2. <strong>LoadBalancer</strong> :
+Exposition externe via AWS ALB</p>
+<hr />
+<h3 id="horizontal-pod-autoscaler-hpa">Horizontal Pod Autoscaler
+(HPA)</h3>
+<p><strong>Fichier :</strong> <code>hpa.yaml</code></p>
+<p><strong>Configuration :</strong> - <strong>Min replicas :</strong> 3
+- <strong>Max replicas :</strong> 10 - <strong>Métriques :</strong> -
+CPU : 70% d’utilisation - Mémoire : 80% d’utilisation -
+<strong>Comportement :</strong> - Scale down : 10% par 60s
+(stabilisation 300s) - Scale up : 100% ou 4 pods par 15s (réactif)</p>
+<hr />
+<h3 id="ingress">Ingress</h3>
+<p><strong>Fichier :</strong> <code>ingress.yaml</code></p>
+<p><strong>Fonctionnalités :</strong> - <strong>SSL/TLS</strong> :
+Redirection automatique HTTPS - <strong>Cert-Manager</strong> :
+Certificats Let’s Encrypt automatiques - <strong>Rate limiting</strong>
+: 100 requêtes par minute - <strong>Hosts :</strong> multiserve.app,
+www.multiserve.app</p>
+<hr />
+<h3 id="configmap">ConfigMap</h3>
+<p><strong>Fichier :</strong> <code>configmap.yaml</code></p>
+<p><strong>Variables d’environnement :</strong> - DEBUG, DB_ENGINE,
+DB_NAME, DB_USER - DB_HOST, DB_PORT, REDIS_URL - ALLOWED_HOSTS,
+MEDIA_URL, STATIC_URL</p>
+<hr />
+<h3 id="secret">Secret</h3>
+<p><strong>Fichier :</strong> <code>secret.yaml.template</code></p>
+<p><strong>Données sensibles (base64) :</strong> - SECRET_KEY (Django) -
+DB_PASSWORD (PostgreSQL) - REDIS_PASSWORD - STRIPE_SECRET_KEY -
+PAYPAL_CLIENT_SECRET</p>
+<hr />
+<h3 id="persistentvolumeclaim-pvc">PersistentVolumeClaim (PVC)</h3>
+<p><strong>Fichier :</strong> <code>pvc.yaml</code></p>
+<p><strong>Stockage :</strong> - <strong>static-pvc :</strong> 5Gi
+(fichiers statiques) - <strong>media-pvc :</strong> 10Gi (fichiers
+médias) - <strong>StorageClass :</strong> efs-sc (AWS EFS)</p>
+<hr />
+<h3 id="serviceaccount">ServiceAccount</h3>
+<p><strong>Fichier :</strong> `serviceaccount.yaml**</p>
+<p><strong>IAM Role :</strong> Intégration avec AWS IAM via IRSA (IAM
+Roles for Service Accounts)</p>
+<hr />
+<h3 id="networkpolicy">NetworkPolicy</h3>
+<p><strong>Fichier :</strong> <code>networkpolicy.yaml</code></p>
+<p><strong>Règles de sécurité :</strong> - <strong>Default deny
+:</strong> Tout le trafic ingress bloqué par défaut - <strong>Allow
+ingress :</strong> Uniquement depuis Ingress Controller - <strong>Allow
+egress :</strong> Ports 443, 80, 5432, 6379</p>
+<hr />
+<h3 id="postgresql">PostgreSQL</h3>
+<p><strong>Fichier :</strong> <code>postgresql.yaml</code></p>
+<p><strong>Configuration :</strong> - <strong>StatefulSet</strong> : 1
+replica - <strong>Image :</strong> postgres:15-alpine - <strong>Stockage
+:</strong> 20Gi PVC - <strong>Ressources :</strong> 512Mi-1Gi RAM,
+250m-500m CPU - <strong>Probes :</strong> pg_isready</p>
+<hr />
+<h3 id="redis">Redis</h3>
+<p><strong>Fichier :</strong> <code>redis.yaml</code></p>
+<p><strong>Configuration :</strong> - <strong>StatefulSet</strong> : 1
+replica - <strong>Image :</strong> redis:7-alpine - <strong>Stockage
+:</strong> 5Gi PVC - <strong>Ressources :</strong> 256Mi-512Mi RAM,
+100m-250m CPU - <strong>Authentification :</strong> Password required -
+<strong>Persistence :</strong> AOF enabled</p>
+<hr />
+<h3 id="servicemonitor">ServiceMonitor</h3>
+<p><strong>Fichier :</strong> <code>servicemonitor.yaml</code></p>
+<p><strong>Configuration Prometheus :</strong> - <strong>Endpoint
+:</strong> /metrics - <strong>Interval :</strong> 15s - <strong>Scrape
+timeout :</strong> 10s</p>
+<hr />
+<h2 id="déploiement">Déploiement</h2>
+<h3 id="prérequis">Prérequis</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Installer kubectl</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-LO</span> <span class="st">&quot;https://dl.k8s.io/release/</span><span class="va">$(</span><span class="ex">curl</span> <span class="at">-L</span> <span class="at">-s</span> https://dl.k8s.io/release/stable.txt<span class="va">)</span><span class="st">/bin/windows/amd64/kubectl.exe&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Installer kustomize</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> install sigs.k8s.io/kustomize/kustomize/v5@latest</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Configurer AWS CLI</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> configure</span></code></pre></div>
+<h3 id="déploiement-sur-eks">Déploiement sur EKS</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Configurer le contexte EKS</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> eks update-kubeconfig <span class="at">--name</span> multiserve-cluster <span class="at">--region</span> eu-west-3</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Créer le namespace</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> apply <span class="at">-f</span> k8s/base/namespace.yaml</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Créer les secrets</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> create secret generic multiserve-secrets <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--from-literal</span><span class="op">=</span>SECRET_KEY=<span class="st">&#39;your-secret-key&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--from-literal</span><span class="op">=</span>DB_PASSWORD=<span class="st">&#39;your-db-password&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--from-literal</span><span class="op">=</span>REDIS_PASSWORD=<span class="st">&#39;your-redis-password&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--from-literal</span><span class="op">=</span>STRIPE_SECRET_KEY=<span class="st">&#39;your-stripe-key&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--from-literal</span><span class="op">=</span>PAYPAL_CLIENT_SECRET=<span class="st">&#39;your-paypal-secret&#39;</span> <span class="dt">\</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">-n</span> multiserve</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Déployer avec Kustomize</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> apply <span class="at">-k</span> k8s/base/</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Vérifier le déploiement</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> get all <span class="at">-n</span> multiserve</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> get pods <span class="at">-n</span> multiserve <span class="at">-w</span></span></code></pre></div>
+<h3 id="déploiement-avec-overlay-stagingproduction">Déploiement avec
+overlay (staging/production)</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Déploiement staging</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> apply <span class="at">-k</span> k8s/overlays/staging/</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Déploiement production</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> apply <span class="at">-k</span> k8s/overlays/production/</span></code></pre></div>
+<hr />
+<h2 id="monitoring-avec-prometheus">Monitoring avec Prometheus</h2>
+<h3 id="architecture-monitoring">Architecture Monitoring</h3>
+<pre><code>Application Pods
+       │
+       │ /metrics
+       ▼
+ServiceMonitor (Prometheus Operator)
+       │
+       ▼
+Prometheus (scrape 15s)
+       │
+       ▼
+Grafana (dashboards)</code></pre>
+<h3 id="métriques-exposées">Métriques exposées</h3>
+<ul>
+<li><strong>Django :</strong> Requêtes HTTP, temps de réponse,
+erreurs</li>
+<li><strong>PostgreSQL :</strong> Connexions, requêtes, performance</li>
+<li><strong>Redis :</strong> Opérations, mémoire, hit rate</li>
+<li><strong>Kubernetes :</strong> Pods, CPU, mémoire, réseau</li>
+</ul>
+<h3 id="dashboards-grafana">Dashboards Grafana</h3>
+<ol type="1">
+<li><strong>MultiServe Overview</strong> : Vue globale de
+l’application</li>
+<li><strong>Django Performance</strong> : Métriques Django</li>
+<li><strong>Database Performance</strong> : Métriques PostgreSQL</li>
+<li><strong>Redis Performance</strong> : Métriques Redis</li>
+<li><strong>Kubernetes Cluster</strong> : Ressources cluster</li>
+</ol>
+<hr />
+<h2 id="sécurité">Sécurité</h2>
+<h3 id="network-policies">1. Network Policies</h3>
+<ul>
+<li><strong>Principe de moindre privilège</strong> : Tout bloqué par
+défaut</li>
+<li><strong>Segmentation réseau</strong> : Isolation par namespace</li>
+<li><strong>Contrôle du trafic</strong> : Egress limité aux ports
+nécessaires</li>
+</ul>
+<h3 id="secrets-management">2. Secrets Management</h3>
+<ul>
+<li><strong>Kubernetes Secrets</strong> : Stockage chiffré</li>
+<li><strong>Base64 encoding</strong> : Encodage des valeurs
+sensibles</li>
+<li><strong>IRSA</strong> : IAM Roles for Service Accounts (AWS)</li>
+</ul>
+<h3 id="container-security">3. Container Security</h3>
+<ul>
+<li><strong>Non-root user</strong> : runAsNonRoot: true</li>
+<li><strong>Read-only filesystem</strong> : readOnlyRootFilesystem:
+true</li>
+<li><strong>Capabilities dropped</strong> : ALL capabilities
+supprimées</li>
+<li><strong>No privilege escalation</strong> : allowPrivilegeEscalation:
+false</li>
+</ul>
+<h3 id="ingress-security">4. Ingress Security</h3>
+<ul>
+<li><strong>SSL/TLS</strong> : Certificats Let’s Encrypt
+automatiques</li>
+<li><strong>Rate limiting</strong> : Protection contre DDoS</li>
+<li><strong>HTTPS redirect</strong> : Redirection automatique</li>
+</ul>
+<h3 id="pod-security">5. Pod Security</h3>
+<ul>
+<li><strong>Anti-affinity</strong> : Distribution sur différents
+nœuds</li>
+<li><strong>Resource limits</strong> : Protection contre l’épuisement
+des ressources</li>
+<li><strong>Health checks</strong> : Probes liveness/readiness</li>
+</ul>
+<hr />
+<h2 id="scalabilité">Scalabilité</h2>
+<h3 id="horizontal-pod-autoscaler-hpa-1">Horizontal Pod Autoscaler
+(HPA)</h3>
+<p><strong>Métriques de scaling :</strong> - <strong>CPU</strong> :
+Scale si &gt; 70% - <strong>Mémoire</strong> : Scale si &gt; 80%</p>
+<p><strong>Comportement :</strong> - <strong>Scale up</strong> : Rapide
+(15s) pour répondre à la charge - <strong>Scale down</strong> :
+Progressif (300s stabilisation) pour éviter le flapping</p>
+<h3 id="vertical-pod-autoscaler-vpa">Vertical Pod Autoscaler (VPA)</h3>
+<p><strong>Recommandation de ressources :</strong> - Analyse de
+l’utilisation historique - Ajustement automatique des
+requests/limits</p>
+<h3 id="cluster-autoscaler">Cluster Autoscaler</h3>
+<p><strong>AWS EKS :</strong> - Ajout automatique de nœuds si nécessaire
+- Suppression des nœuds inutilisés - Économie des coûts</p>
+<hr />
+<h2 id="commandes-utiles">Commandes utiles</h2>
+<h3 id="déploiement-1">Déploiement</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Appliquer tous les manifests</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> apply <span class="at">-k</span> k8s/base/</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérifier l&#39;état</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> get all <span class="at">-n</span> multiserve</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Logs des pods</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> logs <span class="at">-f</span> deployment/multiserve-app <span class="at">-n</span> multiserve</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Entrer dans un pod</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> exec <span class="at">-it</span> deployment/multiserve-app <span class="at">-n</span> multiserve <span class="at">--</span> /bin/bash</span></code></pre></div>
+<h3 id="debug">Debug</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Décrire un pod</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> describe pod <span class="op">&lt;</span>pod-name<span class="op">&gt;</span> -n multiserve</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Décrire un service</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> describe service multiserve-app <span class="at">-n</span> multiserve</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Événements du namespace</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> get events <span class="at">-n</span> multiserve <span class="at">--sort-by</span><span class="op">=</span><span class="st">&#39;.lastTimestamp&#39;</span></span></code></pre></div>
+<h3 id="scaling">Scaling</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Manuel</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> scale deployment multiserve-app <span class="at">--replicas</span><span class="op">=</span>5 <span class="at">-n</span> multiserve</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérifier HPA</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> get hpa <span class="at">-n</span> multiserve</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Désactiver HPA</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> delete hpa multiserve-hpa <span class="at">-n</span> multiserve</span></code></pre></div>
+<h3 id="monitoring">Monitoring</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérifier ServiceMonitor</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> get servicemonitor <span class="at">-n</span> multiserve</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérifier les targets Prometheus</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> port-forward svc/prometheus 9090:9090 <span class="at">-n</span> monitoring</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérifier Grafana</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> port-forward svc/grafana 3000:3000 <span class="at">-n</span> monitoring</span></code></pre></div>
+<h3 id="rollback">Rollback</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Historique des déploiements</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> rollout history deployment/multiserve-app <span class="at">-n</span> multiserve</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Rollback à la version précédente</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> rollout undo deployment/multiserve-app <span class="at">-n</span> multiserve</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Rollback à une version spécifique</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> rollout undo deployment/multiserve-app <span class="at">--to-revision</span><span class="op">=</span>2 <span class="at">-n</span> multiserve</span></code></pre></div>
+<h3 id="nettoyage">Nettoyage</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Supprimer tous les ressources</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> delete <span class="at">-k</span> k8s/base/</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Supprimer le namespace</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> delete namespace multiserve</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Supprimer les PVC</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kubectl</span> delete pvc static-pvc media-pvc postgres-pvc redis-pvc <span class="at">-n</span> multiserve</span></code></pre></div>
+<hr />
+<h2 id="schéma-darchitecture">Schéma d’architecture</h2>
+<h3 id="vue-détaillée">Vue détaillée</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                        AWS EKS Cluster                          │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Node Group 1 (m5.large)              │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │  │
+│  │  │  Pod 1   │  │  Pod 2   │  │  Postgres│              │  │
+│  │  │ (Django) │  │ (Django) │  │  (DB)    │              │  │
+│  │  └──────────┘  └──────────┘  └──────────┘              │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Node Group 2 (m5.large)              │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │  │
+│  │  │  Pod 3   │  │  Redis   │  │  Nginx   │              │  │
+│  │  │ (Django) │  │  (Cache) │  │(Ingress) │              │  │
+│  │  └──────────┘  └──────────┘  └──────────┘              │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    AWS Services                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
+│  │   ALB    │  │   EFS    │  │   RDS    │  │ ElastiCache│    │
+│  │ (LB)     │  │ (Storage)│  │ (Backup) │  │  (Redis)   │    │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘      │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="flux-de-requête">Flux de requête</h3>
+<pre><code>User Request
+    │
+    ▼
+AWS ALB (Load Balancer)
+    │
+    ▼
+NGINX Ingress Controller (SSL termination, routing)
+    │
+    ▼
+MultiServe Service (ClusterIP)
+    │
+    ▼
+MultiServe Pods (Django application)
+    │
+    ├─► PostgreSQL (StatefulSet)
+    └─► Redis (StatefulSet)</code></pre>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>Cette architecture Kubernetes offre :</p>
+<p>✅ <strong>Haute disponibilité</strong> : 3 replicas,
+anti-affinity<br />
+✅ <strong>Scalabilité automatique</strong> : HPA basé sur
+CPU/mémoire<br />
+✅ <strong>Sécurité renforcée</strong> : Network policies, secrets,
+RBAC<br />
+✅ <strong>Monitoring complet</strong> : Prometheus + Grafana<br />
+✅ <strong>Déploiement sans interruption</strong> : Rolling
+updates<br />
+✅ <strong>Résilience</strong> : Health checks, auto-restart<br />
+✅ <strong>Flexibilité</strong> : Kustomize pour différents
+environnements</p>
+<hr />
+<h2 id="annexes">Annexes</h2>
+<h3 id="fichiers-kubernetes">Fichiers Kubernetes</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Fichier</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>namespace.yaml</code></td>
+<td>Namespace multiserve</td>
+</tr>
+<tr class="even">
+<td><code>configmap.yaml</code></td>
+<td>Configuration non sensible</td>
+</tr>
+<tr class="odd">
+<td><code>secret.yaml.template</code></td>
+<td>Template pour secrets</td>
+</tr>
+<tr class="even">
+<td><code>deployment.yaml</code></td>
+<td>Deployment Django</td>
+</tr>
+<tr class="odd">
+<td><code>service.yaml</code></td>
+<td>Services ClusterIP et LoadBalancer</td>
+</tr>
+<tr class="even">
+<td><code>hpa.yaml</code></td>
+<td>Horizontal Pod Autoscaler</td>
+</tr>
+<tr class="odd">
+<td><code>ingress.yaml</code></td>
+<td>Ingress NGINX</td>
+</tr>
+<tr class="even">
+<td><code>pvc.yaml</code></td>
+<td>PersistentVolumeClaims</td>
+</tr>
+<tr class="odd">
+<td><code>serviceaccount.yaml</code></td>
+<td>ServiceAccount avec IAM role</td>
+</tr>
+<tr class="even">
+<td><code>networkpolicy.yaml</code></td>
+<td>Network policies</td>
+</tr>
+<tr class="odd">
+<td><code>postgresql.yaml</code></td>
+<td>StatefulSet PostgreSQL</td>
+</tr>
+<tr class="even">
+<td><code>redis.yaml</code></td>
+<td>StatefulSet Redis</td>
+</tr>
+<tr class="odd">
+<td><code>servicemonitor.yaml</code></td>
+<td>ServiceMonitor Prometheus</td>
+</tr>
+</tbody>
+</table>
+<h3 id="liens-utiles">Liens utiles</h3>
+<ul>
+<li><a href="https://kubernetes.io/docs/">Documentation
+Kubernetes</a></li>
+<li><a href="https://docs.aws.amazon.com/eks/">Documentation
+EKS</a></li>
+<li><a href="https://kustomize.io/">Kustomize</a></li>
+<li><a href="https://prometheus-operator.dev/">Prometheus
+Operator</a></li>
+<li><a href="https://kubernetes.github.io/ingress-nginx/">NGINX
+Ingress</a></li>
+</ul>
+<hr />
+<p><strong>Fin de la documentation</strong></p>
+</body>
+</html>

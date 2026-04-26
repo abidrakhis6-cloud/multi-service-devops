@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ store.name }} - Pharmacie - MultiServe{% endblock %}
+
+{% block content %}
+<style>
+.store-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 30px;
+    background: var(--card);
+    border-radius: 20px;
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+}
+
+.store-logo-large {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+.store-info h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.store-info p {
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+.store-stats {
+    display: flex;
+    gap: 30px;
+    margin-top: 15px;
+}
+
+.store-stats span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+}
+
+.store-stats i {
+    color: #f59e0b;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.product-card {
+    background: var(--card);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.product-info {
+    padding: 20px;
+}
+
+.product-info h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.product-info p {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.product-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ef4444;
+    margin-bottom: 15px;
+}
+
+.add-to-cart-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-to-cart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #ef4444;
+}
+
+.urgence-banner {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    font-weight: 600;
+}
+</style>
+
+<a href="/pharmacie/" class="back-link">
+    <i class="fas fa-arrow-left"></i> Retour à la pharmacie
+</a>
+
+<div class="urgence-banner">
+    <i class="fas fa-ambulance"></i>
+    <span>Livraison urgente disponible 24/7 - Contactez-nous au 01 23 45 67 89</span>
+</div>
+
+<div class="store-header">
+    <img src="{{ store.image }}" alt="{{ store.name }}" class="store-logo-large">
+    <div class="store-info">
+        <h1>{{ store.name }}</h1>
+        <p>Produits de santé et beauté - Livraison rapide</p>
+        <div class="store-stats">
+            <span><i class="fas fa-star"></i> {{ store.rating }}</span>
+            <span><i class="fas fa-clock"></i> 15-25 min</span>
+            <span><i class="fas fa-truck-medical"></i> Livraison urgente</span>
+        </div>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 25px; font-size: 28px;"><i class="fas fa-pills"></i> Produits disponibles</h2>
+
+<div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <img src="{{ product.image }}" alt="{{ product.name }}" class="product-image">
+        <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <p>{{ product.description }}</p>
+            <div class="product-price">{{ product.price }}€</div>
+            <button class="add-to-cart-btn" onclick="addToCart('{{ store.name|escapejs }}', '{{ product.name|escapejs }}', {{ product.price }}, '{{ product.image|escapejs }}')">
+                <i class="fas fa-cart-plus"></i> Ajouter au panier
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function addToCart(storeName, productName, price, image){
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    
+    let existingItem = cart.find(item => item.name === productName && item.store === storeName);
+    
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            store: storeName,
+            name: productName,
+            price: price,
+            image: image,
+            quantity: 1
+        });
+    }
+    
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    
+    showNotification("✅ " + productName + " ajouté au panier");
+}
+
+function showNotification(message) {
+    let notif = document.createElement('div');
+    notif.textContent = message;
+    notif.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        z-index: 10000;
+        font-weight: 600;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notif.remove(), 300);
+    }, 3000);
+}
+
+let style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

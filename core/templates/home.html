@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%);
+    border-radius: 20px;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.hero h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    font-size: 20px;
+    color: #94a3b8;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.category-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+}
+
+.category-card:hover::before {
+    transform: scaleX(1);
+}
+
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.category-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.category-card h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.category-card p {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.6;
+}
+
+.restaurant { --accent-color: #f59e0b; }
+.courses { --accent-color: #10b981; }
+.boutique { --accent-color: #8b5cf6; }
+.pharmacie { --accent-color: #ef4444; }
+.livraison { --accent-color: #3b82f6; }
+
+.features-section {
+    margin-top: 60px;
+    padding: 40px;
+    background: var(--card);
+    border-radius: 20px;
+    text-align: center;
+}
+
+.features-section h2 {
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: var(--text);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.feature-item {
+    padding: 25px;
+}
+
+.feature-item i {
+    font-size: 40px;
+    color: #3b82f6;
+    margin-bottom: 15px;
+}
+
+.feature-item h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.feature-item p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+</style>
+
+<div class="hero">
+    <h1>MultiServe</h1>
+    <p>Tous vos services à domicile - Restaurants, Courses, Boutiques, Pharmacie et Livraison en temps réel</p>
+</div>
+
+<div class="categories-grid">
+    <a href="/restaurants/" class="category-card restaurant">
+        <i class="fas fa-utensils category-icon" style="color: #f59e0b;"></i>
+        <h3>🍔 Restaurants</h3>
+        <p>Commandez chez KFC, McDonald's, Quick et bien d'autres. Livraison rapide de vos repas préférés.</p>
+    </a>
+
+    <a href="/courses/" class="category-card courses">
+        <i class="fas fa-shopping-basket category-icon" style="color: #10b981;"></i>
+        <h3>🛒 Courses</h3>
+        <p>Faites vos courses chez Lidl, Leclerc, Aldi, Carrefour, Super U. Livraison à domicile en 30min.</p>
+    </a>
+
+    <a href="/boutiques/" class="category-card boutique">
+        <i class="fas fa-store category-icon" style="color: #8b5cf6;"></i>
+        <h3>🛍️ Boutiques</h3>
+        <p>Apple, Dior, Chanel, Louis Vuitton. iPhone, MacBook, accessoires, mode et luxe.</p>
+    </a>
+
+    <a href="/pharmacie/" class="category-card pharmacie">
+        <i class="fas fa-pills category-icon" style="color: #ef4444;"></i>
+        <h3>💊 Pharmacie</h3>
+        <p>Médicaments, parapharmacie, beauté et soins. Livraison 24/7 de vos produits de santé.</p>
+    </a>
+
+    <a href="/livraison/" class="category-card livraison">
+        <i class="fas fa-map-marker-alt category-icon" style="color: #3b82f6;"></i>
+        <h3>🚚 Livraison</h3>
+        <p>Suivez votre livreur en temps réel sur la carte. Chat, appel et localisation GPS.</p>
+    </a>
+</div>
+
+<div class="features-section">
+    <h2>Pourquoi choisir MultiServe ?</h2>
+    <div class="features-grid">
+        <div class="feature-item">
+            <i class="fas fa-bolt"></i>
+            <h4>Livraison Rapide</h4>
+            <p>Livraison en 30 minutes ou moins dans toute la ville</p>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-shield-alt"></i>
+            <h4>Paiement Sécurisé</h4>
+            <p>6 méthodes de paiement : CB, Visa, PayPal, Apple Pay, Google Pay, Espèces</p>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-comments"></i>
+            <h4>Chat en Direct</h4>
+            <p>Discutez avec votre livreur en temps réel pendant la livraison</p>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <h4>Suivi GPS</h4>
+            <p>Suivez votre livreur en temps réel sur Google Maps</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

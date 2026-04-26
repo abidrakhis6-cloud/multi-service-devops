@@ -1,0 +1,13 @@
+{
+  "account_holder_name": "Abidrakhis",
+  "iban": "FR76 3000 3015 5100 0509 6014 759",
+  "bic_swift": "SOGEFRPP",
+  "bank_name": "Société Générale",
+  "rib": {
+    "banque": "30003",
+    "guichet": "01551",
+    "compte": "00050960147",
+    "cle": "59"
+  },
+  "notes": "Ce fichier contient les informations bancaires pour recevoir les paiements Stripe Connect"
+}

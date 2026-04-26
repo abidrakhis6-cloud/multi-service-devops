@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion - MultiServe{% endblock %}
+
+{% block content %}
+<style>
+.auth-container {
+    max-width: 450px;
+    margin: 50px auto;
+}
+
+.auth-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header i {
+    font-size: 60px;
+    color: #3b82f6;
+    margin-bottom: 15px;
+}
+
+.auth-header h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+    color: #94a3b8;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.form-group .input-icon {
+    position: relative;
+}
+
+.form-group .input-icon i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.form-group .input-icon input {
+    padding-left: 50px;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border);
+}
+
+.auth-footer p {
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+
+.auth-footer a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.social-login {
+    margin-top: 25px;
+}
+
+.social-login p {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.social-login p::before,
+.social-login p::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: var(--border);
+}
+
+.social-login p::before { left: 0; }
+.social-login p::after { right: 0; }
+
+.social-btns {
+    display: flex;
+    gap: 15px;
+}
+
+.social-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.social-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #3b82f6;
+}
+
+.social-btn i {
+    font-size: 20px;
+}
+
+.social-btn.google i { color: #ea4335; }
+.social-btn.facebook i { color: #1877f2; }
+.social-btn.apple i { color: #fff; }
+
+.login-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    border-color: transparent;
+    color: white;
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+    font-size: 16px;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.code-info {
+    color: #10b981;
+    font-size: 13px;
+    margin-top: 8px;
+}
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-user-circle"></i>
+            <h1>Connexion</h1>
+            <p>Connectez-vous pour accéder à votre compte</p>
+        </div>
+
+        <form method="post" action="/login/" id="login-form">
+            {% csrf_token %}
+            
+            <div class="login-tabs">
+                <button type="button" class="tab-btn active" onclick="switchTab('email')" id="tab-email">
+                    <i class="fas fa-envelope"></i> Email
+                </button>
+                <button type="button" class="tab-btn" onclick="switchTab('phone')" id="tab-phone">
+                    <i class="fas fa-mobile-alt"></i> Téléphone
+                </button>
+            </div>
+            
+            <div id="email-login">
+                <div class="form-group">
+                    <label>Adresse email ou nom d'utilisateur</label>
+                    <div class="input-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="text" name="username" placeholder="exemple@email.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" placeholder="Votre mot de passe">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="phone-login" style="display: none;">
+                <div class="form-group">
+                    <label>Numéro de téléphone</label>
+                    <div class="input-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                        <input type="tel" id="phone-number" name="phone" placeholder="07 59 24 36 51" maxlength="14">
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-secondary" onclick="sendVerificationCode()" id="send-code-btn">
+                    <i class="fas fa-paper-plane"></i> Envoyer le code SMS
+                </button>
+                
+                <div class="form-group" id="code-section" style="display: none; margin-top: 20px;">
+                    <label>Code de vérification</label>
+                    <div class="input-icon">
+                        <i class="fas fa-shield-alt"></i>
+                        <input type="text" id="verification-code" name="verification_code" placeholder="123456" maxlength="6">
+                    </div>
+                    <p class="code-info">Un code à 6 chiffres a été envoyé à votre téléphone</p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn auth-btn">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
+            </button>
+        </form>
+
+        <div class="social-login">
+            <p>Ou continuer avec</p>
+            <div class="social-btns">
+                <button class="social-btn google">
+                    <i class="fab fa-google"></i>
+                    Google
+                </button>
+                <button class="social-btn facebook">
+                    <i class="fab fa-facebook-f"></i>
+                    Facebook
+                </button>
+            </div>
+        </div>
+
+        <div class="auth-footer">
+            <p>Pas encore de compte ?</p>
+            <a href="/register/">Créer un compte gratuitement</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(tab) {
+    const emailLogin = document.getElementById('email-login');
+    const phoneLogin = document.getElementById('phone-login');
+    const tabEmail = document.getElementById('tab-email');
+    const tabPhone = document.getElementById('tab-phone');
+    
+    if (tab === 'email') {
+        emailLogin.style.display = 'block';
+        phoneLogin.style.display = 'none';
+        tabEmail.classList.add('active');
+        tabPhone.classList.remove('active');
+    } else {
+        emailLogin.style.display = 'none';
+        phoneLogin.style.display = 'block';
+        tabEmail.classList.remove('active');
+        tabPhone.classList.add('active');
+    }
+}
+
+let generatedCode = null;
+let countdown = 60;
+let countdownInterval = null;
+
+function sendVerificationCode() {
+    const phoneInput = document.getElementById('phone-number');
+    const phone = phoneInput.value.trim();
+    
+    if (!phone || phone.length < 10) {
+        alert('Veuillez entrer un numéro de téléphone valide');
+        return;
+    }
+    
+    // Generate random 6-digit code
+    generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Show code section
+    document.getElementById('code-section').style.display = 'block';
+    
+    // Disable send button and start countdown
+    const sendBtn = document.getElementById('send-code-btn');
+    sendBtn.disabled = true;
+    
+    // In production, this would call your backend API to send SMS
+    fetch('/api/send-verification-sms/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            phone: phone,
+            code: generatedCode
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('📱 Code de vérification envoyé au ' + phone);
+        } else {
+            // Fallback for demo
+            alert('📱 Code de vérification envoyé au ' + phone + '\n\nCode (démo): ' + generatedCode);
+        }
+    })
+    .catch(error => {
+        // Fallback for demo
+        alert('📱 Code de vérification envoyé au ' + phone + '\n\nCode (démo): ' + generatedCode);
+    });
+    
+    // Start countdown
+    countdown = 60;
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 1000);
+}
+
+function updateCountdown() {
+    const sendBtn = document.getElementById('send-code-btn');
+    if (countdown > 0) {
+        sendBtn.innerHTML = `<i class="fas fa-clock"></i> Renvoyer dans ${countdown}s`;
+        countdown--;
+    } else {
+        clearInterval(countdownInterval);
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Renvoyer le code SMS';
+    }
+}
+
+// Verify code on input
+document.addEventListener('DOMContentLoaded', function() {
+    const codeInput = document.getElementById('verification-code');
+    if (codeInput) {
+        codeInput.addEventListener('input', function() {
+            if (this.value.length === 6) {
+                if (this.value === generatedCode) {
+                    this.style.borderColor = '#10b981';
+                    // Auto-submit or show success
+                    setTimeout(() => {
+                        document.getElementById('login-form').submit();
+                    }, 500);
+                } else {
+                    this.style.borderColor = '#ef4444';
+                }
+            }
+        });
+    }
+    
+    // Phone number formatting
+    const phoneInput = document.getElementById('phone-number');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 2) {
+                    value = value;
+                } else if (value.length <= 4) {
+                    value = value.slice(0, 2) + ' ' + value.slice(2);
+                } else if (value.length <= 6) {
+                    value = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4);
+                } else if (value.length <= 8) {
+                    value = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4, 6) + ' ' + value.slice(6);
+                } else {
+                    value = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4, 6) + ' ' + value.slice(6, 8) + ' ' + value.slice(8, 10);
+                }
+            }
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}

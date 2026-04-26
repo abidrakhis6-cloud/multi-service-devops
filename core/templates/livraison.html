@@ -1,0 +1,906 @@
+{% extends 'base.html' %}
+
+{% block title %}Suivi de Livraison - MultiServe{% endblock %}
+
+{% block content %}
+<style>
+.delivery-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 900px) {
+    .delivery-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.map-container {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid var(--border);
+    height: 500px;
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+}
+
+.map-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.map-overlay p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.map-overlay .distance {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.driver-info {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid var(--border);
+}
+
+.driver-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+
+.driver-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: white;
+    position: relative;
+}
+
+.driver-avatar::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 15px;
+    height: 15px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.driver-details h3 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.driver-details p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.rating {
+    color: #f59e0b;
+    margin-top: 5px;
+}
+
+.status-timeline {
+    margin: 25px 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-left: 3px solid var(--border);
+    padding-left: 25px;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -9px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--border);
+}
+
+.timeline-item.active::before {
+    background: #10b981;
+    box-shadow: 0 0 15px #10b981;
+}
+
+.timeline-item.active {
+    border-left-color: #10b981;
+}
+
+.timeline-item i {
+    font-size: 24px;
+    color: #94a3b8;
+}
+
+.timeline-item.active i {
+    color: #10b981;
+}
+
+.timeline-content h4 {
+    font-size: 16px;
+    margin-bottom: 3px;
+}
+
+.timeline-content p {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.communication-btns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.comm-btn {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.comm-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.comm-btn.voice {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
+.comm-btn.voice:hover {
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.comm-btn i {
+    font-size: 24px;
+}
+
+.chat-section {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid var(--border);
+    margin-top: 30px;
+    grid-column: 1 / -1;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+
+.chat-header i {
+    font-size: 28px;
+    color: #3b82f6;
+}
+
+.chat-messages {
+    height: 250px;
+    overflow-y: auto;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.message {
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    max-width: 70%;
+}
+
+.message.driver {
+    background: rgba(59, 130, 246, 0.2);
+    margin-right: auto;
+}
+
+.message.customer {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    margin-left: auto;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text);
+    font-size: 15px;
+}
+
+.chat-input button {
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.estimated-time {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.estimated-time h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.estimated-time .time {
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.sms-modal, .call-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: var(--card);
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid var(--border);
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.modal-content input, .modal-content textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text);
+    margin-bottom: 15px;
+    font-family: inherit;
+}
+
+.modal-content textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.modal-buttons .btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+}
+
+.modal-buttons .btn-secondary {
+    background: var(--border);
+    color: var(--text);
+}
+
+.call-interface {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    z-index: 3000;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.call-interface.active {
+    display: flex;
+}
+
+.caller-info {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.caller-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    color: white;
+    margin: 0 auto 20px;
+}
+
+.caller-info h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.caller-info p {
+    color: #94a3b8;
+    font-size: 18px;
+}
+
+.call-timer {
+    font-size: 24px;
+    color: #10b981;
+    margin-top: 10px;
+}
+
+.call-controls {
+    display: flex;
+    gap: 30px;
+}
+
+.call-control-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    transition: all 0.3s ease;
+}
+
+.call-control-btn.mute {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.call-control-btn.speaker {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.call-control-btn.end {
+    background: #ef4444;
+    color: white;
+}
+
+.call-control-btn:hover {
+    transform: scale(1.1);
+}
+</style>
+
+<h1 style="margin-bottom: 30px;"><i class="fas fa-map-marker-alt"></i> Suivi de Livraison</h1>
+
+<div class="delivery-container">
+    <div class="map-container">
+        <div id="map"></div>
+        <div class="map-overlay">
+            <p><strong>� {{ store.name }}</strong> - {{ store.address }}</p>
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 5px;">➜ {{ customer.address }}</p>
+            <p class="distance" id="distance-info" style="margin-top: 10px;">Calcul de l'itinéraire...</p>
+        </div>
+    </div>
+
+    <div class="driver-info">
+        <div class="estimated-time">
+            <h3><i class="fas fa-clock"></i> Livraison estimée</h3>
+            <div class="time" id="estimated-time">--:--</div>
+            <p style="margin-top: 5px; opacity: 0.9;">En cours de calcul...</p>
+        </div>
+
+        <div class="driver-card">
+            <div class="driver-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="driver-details">
+                <h3>{{ driver.name }}</h3>
+                <p>{{ driver.vehicle }} - #{{ driver.id }}</p>
+                <div class="rating">⭐⭐⭐⭐⭐ {{ driver.rating }} ({{ driver.deliveries }} livraisons)</div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 20px;"><i class="fas fa-route"></i> Statut de la commande</h3>
+        
+        <div class="status-timeline">
+            <div class="timeline-item active">
+                <i class="fas fa-check-circle"></i>
+                <div class="timeline-content">
+                    <h4>Commande confirmée</h4>
+                    <p>13:45 - Votre commande est prise en charge</p>
+                </div>
+            </div>
+            <div class="timeline-item active">
+                <i class="fas fa-utensils"></i>
+                <div class="timeline-content">
+                    <h4>En préparation</h4>
+                    <p>13:52 - Le restaurant prépare votre commande</p>
+                </div>
+            </div>
+            <div class="timeline-item active">
+                <i class="fas fa-box"></i>
+                <div class="timeline-content">
+                    <h4>Prête pour la livraison</h4>
+                    <p>14:15 - Le livreur a récupéré votre commande</p>
+                </div>
+            </div>
+            <div class="timeline-item active">
+                <i class="fas fa-biking"></i>
+                <div class="timeline-content">
+                    <h4>En cours de livraison</h4>
+                    <p>14:20 - Le livreur est en route vers vous</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <i class="fas fa-home"></i>
+                <div class="timeline-content">
+                    <h4>Livraison</h4>
+                    <p>À venir...</p>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 15px;"><i class="fas fa-comments"></i> Communiquer avec le livreur</h3>
+        
+        <div class="communication-btns">
+            <button class="comm-btn" onclick="startChat()">
+                <i class="fas fa-comment"></i>
+                <span>Chat</span>
+            </button>
+            <a href="tel:{{ driver.phone }}" class="comm-btn">
+                <i class="fas fa-phone"></i>
+                <span>Appel</span>
+            </a>
+            <button class="comm-btn" onclick="showSMSModal()">
+                <i class="fas fa-sms"></i>
+                <span>SMS</span>
+            </button>
+        </div>
+
+        <div class="communication-btns" style="margin-top: 15px;">
+            <button class="comm-btn voice" onclick="startVoiceCall()">
+                <i class="fas fa-microphone"></i>
+                <span>Appel Vocal App</span>
+            </button>
+            <button class="comm-btn voice" onclick="startVideoCall()">
+                <i class="fas fa-video"></i>
+                <span>Video Call</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="chat-section">
+    <div class="chat-header">
+        <i class="fas fa-comments"></i>
+        <div>
+            <h3>Discussion avec Ahmed</h3>
+            <p style="color: #94a3b8; font-size: 14px;">Répond généralement en moins d'une minute</p>
+        </div>
+    </div>
+    
+    <div class="chat-messages" id="chat-messages">
+        <div class="message driver">
+            <strong>Ahmed</strong> - 14:20<br>
+            Bonjour ! J'ai récupéré votre commande chez KFC. Je serai chez vous dans environ 8 minutes ! 🚴
+        </div>
+        <div class="message customer">
+            <strong>Vous</strong> - 14:22<br>
+            Super merci ! Je suis prêt au 12 rue de la Paix
+        </div>
+        <div class="message driver">
+            <strong>Ahmed</strong> - 14:24<br>
+            Parfait, j'arrive ! 👍
+        </div>
+    </div>
+    
+    <div class="chat-input">
+        <input type="text" id="chat-message" placeholder="Écrivez votre message..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i> Envoyer
+        </button>
+    </div>
+</div>
+
+<!-- SMS Modal -->
+<div class="sms-modal" id="sms-modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-sms"></i> Envoyer un SMS</h3>
+        <p style="color: #94a3b8; margin-bottom: 15px;">À: Ahmed (Livreur)</p>
+        <textarea id="sms-message" placeholder="Votre message..."></textarea>
+        <div class="modal-buttons">
+            <button class="btn-primary" onclick="sendSMS()">Envoyer SMS</button>
+            <button class="btn-secondary" onclick="closeSMSModal()">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Call Interface -->
+<div class="call-interface" id="call-interface">
+    <div class="caller-info">
+        <div class="caller-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <h2>Ahmed K.</h2>
+        <p>Livreur MultiServe</p>
+        <div class="call-timer" id="call-timer">00:00</div>
+    </div>
+    <div class="call-controls">
+        <button class="call-control-btn mute" onclick="toggleMute()">
+            <i class="fas fa-microphone" id="mute-icon"></i>
+        </button>
+        <button class="call-control-btn end" onclick="endCall()">
+            <i class="fas fa-phone-slash"></i>
+        </button>
+        <button class="call-control-btn speaker" onclick="toggleSpeaker()">
+            <i class="fas fa-volume-up" id="speaker-icon"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+// Get coordinates from Django context
+const storeLat = {{ store.lat }};
+const storeLng = {{ store.lng }};
+const customerLat = {{ customer.lat }};
+const customerLng = {{ customer.lng }};
+
+// Initialize map
+let map;
+let driverMarker;
+let customerMarker;
+let storeMarker;
+let driverPosition = { lat: storeLat, lng: storeLng }; // Start from store
+let customerPosition = { lat: customerLat, lng: customerLng }; // End at customer
+let storePosition = { lat: storeLat, lng: storeLng };
+
+function initMap() {
+    // Create map centered between driver and customer
+    const center = {
+        lat: (driverPosition.lat + customerPosition.lat) / 2,
+        lng: (driverPosition.lng + customerPosition.lng) / 2
+    };
+    
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 15,
+        center: center,
+        styles: [
+            { elementType: "geometry", stylers: [{ color: "#1e3a5f" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#0a1628" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#748cad" }] },
+            {
+                featureType: "road",
+                elementType: "geometry",
+                stylers: [{ color: "#2d5a87" }]
+            },
+            {
+                featureType: "road",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#1e3a5f" }]
+            },
+            {
+                featureType: "water",
+                elementType: "geometry",
+                stylers: [{ color: "#0f172a" }]
+            }
+        ]
+    });
+
+    // Driver marker
+    driverMarker = new google.maps.Marker({
+        position: driverPosition,
+        map: map,
+        icon: {
+            url: 'https://cdn-icons-png.flaticon.com/512/2928/2928956.png',
+            scaledSize: new google.maps.Size(50, 50)
+        },
+        title: 'Livreur Ahmed'
+    });
+
+    // Customer marker
+    customerMarker = new google.maps.Marker({
+        position: customerPosition,
+        map: map,
+        icon: {
+            url: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            scaledSize: new google.maps.Size(40, 40)
+        },
+        title: 'Votre position'
+    });
+
+    // Draw route line
+    drawRoute();
+    
+    // Simulate driver movement
+    simulateDriverMovement();
+}
+
+function drawRoute() {
+    const routePath = new google.maps.Polyline({
+        path: [driverPosition, customerPosition],
+        geodesic: true,
+        strokeColor: '#3b82f6',
+        strokeOpacity: 1.0,
+        strokeWeight: 4
+    });
+    routePath.setMap(map);
+}
+
+function simulateDriverMovement() {
+    setInterval(() => {
+        // Move driver closer to customer
+        const latDiff = customerPosition.lat - driverPosition.lat;
+        const lngDiff = customerPosition.lng - driverPosition.lng;
+        
+        driverPosition.lat += latDiff * 0.05;
+        driverPosition.lng += lngDiff * 0.05;
+        
+        driverMarker.setPosition(driverPosition);
+        
+        // Update distance
+        const distance = calculateDistance(driverPosition, customerPosition);
+        const time = Math.ceil(distance * 3); // Approx 3 min per km
+        
+        document.getElementById('distance-info').textContent = 
+            `À ${distance.toFixed(1)} km - ${time} min d'arrivée`;
+        document.getElementById('minutes-left').textContent = time;
+        
+        // Update estimated time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + time);
+        document.getElementById('estimated-time').textContent = 
+            now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+    }, 5000); // Update every 5 seconds
+}
+
+function calculateDistance(pos1, pos2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
+    const dLon = (pos2.lng - pos1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Chat functionality
+function startChat() {
+    document.querySelector('.chat-section').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('chat-message').focus();
+}
+
+function sendMessage() {
+    let input = document.getElementById('chat-message');
+    let message = input.value.trim();
+    
+    if (message) {
+        let chatMessages = document.getElementById('chat-messages');
+        let newMessage = document.createElement('div');
+        newMessage.className = 'message customer';
+        newMessage.innerHTML = '<strong>Vous</strong> - ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '<br>' + message;
+        chatMessages.appendChild(newMessage);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        input.value = '';
+        
+        // Simulate driver response
+        setTimeout(() => {
+            let response = document.createElement('div');
+            response.className = 'message driver';
+            response.innerHTML = '<strong>Ahmed</strong> - ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '<br>👍 Reçu !';
+            chatMessages.appendChild(response);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 2000);
+    }
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+// SMS functionality
+function showSMSModal() {
+    document.getElementById('sms-modal').style.display = 'flex';
+}
+
+function closeSMSModal() {
+    document.getElementById('sms-modal').style.display = 'none';
+}
+
+function sendSMS() {
+    const message = document.getElementById('sms-message').value.trim();
+    if (message) {
+        // In production, this would call your backend API
+        fetch('/api/send-sms/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                to: '0612345678',
+                message: message,
+                driver_id: 'LVR-2847'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('✅ SMS envoyé au livreur avec succès !');
+            closeSMSModal();
+            document.getElementById('sms-message').value = '';
+        })
+        .catch(error => {
+            // Fallback for demo
+            alert('✅ SMS envoyé : "' + message + '"');
+            closeSMSModal();
+            document.getElementById('sms-message').value = '';
+        });
+    }
+}
+
+// Voice call functionality
+let callTimer;
+let callSeconds = 0;
+let isMuted = false;
+let isSpeakerOn = false;
+
+function startVoiceCall() {
+    document.getElementById('call-interface').classList.add('active');
+    callSeconds = 0;
+    updateCallTimer();
+    callTimer = setInterval(updateCallTimer, 1000);
+    
+    // In production, initialize WebRTC here
+    console.log('Starting voice call with driver...');
+}
+
+function startVideoCall() {
+    alert('📹 Démarrage de l\'appel vidéo avec Ahmed...\n\nFonctionnalité en cours de développement.');
+}
+
+function updateCallTimer() {
+    callSeconds++;
+    const mins = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+    const secs = (callSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('call-timer').textContent = `${mins}:${secs}`;
+}
+
+function toggleMute() {
+    isMuted = !isMuted;
+    const icon = document.getElementById('mute-icon');
+    if (isMuted) {
+        icon.classList.remove('fa-microphone');
+        icon.classList.add('fa-microphone-slash');
+    } else {
+        icon.classList.remove('fa-microphone-slash');
+        icon.classList.add('fa-microphone');
+    }
+}
+
+function toggleSpeaker() {
+    isSpeakerOn = !isSpeakerOn;
+    const icon = document.getElementById('speaker-icon');
+    if (isSpeakerOn) {
+        icon.classList.remove('fa-volume-up');
+        icon.classList.add('fa-volume-mute');
+    } else {
+        icon.classList.remove('fa-volume-mute');
+        icon.classList.add('fa-volume-up');
+    }
+}
+
+function endCall() {
+    clearInterval(callTimer);
+    document.getElementById('call-interface').classList.remove('active');
+    callSeconds = 0;
+    document.getElementById('call-timer').textContent = '00:00';
+}
+
+// Close modals on outside click
+window.onclick = function(event) {
+    const smsModal = document.getElementById('sms-modal');
+    if (event.target === smsModal) {
+        closeSMSModal();
+    }
+}
+
+// Load Google Maps API
+function loadGoogleMapsAPI() {
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDummyKeyForDevelopment&callback=initMap';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadGoogleMapsAPI();
+});
+</script>
+{% endblock %}

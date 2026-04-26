@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multiserve
+  labels:
+    name: multiserve
+    environment: production
+    istio-injection: enabled
