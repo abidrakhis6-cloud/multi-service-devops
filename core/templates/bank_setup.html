@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuration Bancaire - MultiServe{% endblock %}
+
+{% block content %}
+<style>
+.bank-setup-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 40px;
+    background: var(--card);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+.bank-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.bank-header i {
+    font-size: 60px;
+    color: #10b981;
+    margin-bottom: 15px;
+}
+
+.bank-header h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.bank-header p {
+    color: #94a3b8;
+}
+
+.bank-info {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.bank-info h3 {
+    color: #10b981;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.info-value {
+    color: white;
+    font-weight: 600;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.setup-steps {
+    margin: 30px 0;
+}
+
+.step {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    margin-bottom: 8px;
+}
+
+.step-content p {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-stripe {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+    padding: 16px 32px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-stripe:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 91, 255, 0.4);
+}
+
+.btn-test {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-verified {
+    background: #10b981;
+    color: white;
+}
+
+.status-pending {
+    background: #f59e0b;
+    color: white;
+}
+
+.alert-box {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.alert-box i {
+    color: #f59e0b;
+    margin-right: 10px;
+}
+</style>
+
+<div class="bank-setup-container">
+    <div class="bank-header">
+        <i class="fas fa-university"></i>
+        <h1>Configuration Bancaire</h1>
+        <p>Configurez votre compte pour recevoir les paiements</p>
+    </div>
+
+    <div class="bank-info">
+        <h3><i class="fas fa-check-circle"></i> Compte Bancaire Configuré</h3>
+        
+        <div class="info-row">
+            <span class="info-label">Titulaire du compte</span>
+            <span class="info-value">Abidrakhis</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Banque</span>
+            <span class="info-value">Société Générale</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">IBAN</span>
+            <span class="info-value">FR76 3000 3015 5100 0509 6014 759</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">BIC / SWIFT</span>
+            <span class="info-value">SOGEFRPP</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Code Banque</span>
+            <span class="info-value">30003</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Code Guichet</span>
+            <span class="info-value">01551</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Numéro de Compte</span>
+            <span class="info-value">00050960147</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Clé RIB</span>
+            <span class="info-value">59</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Statut</span>
+            <span class="status-badge status-verified">Vérifié</span>
+        </div>
+    </div>
+
+    <div class="alert-box">
+        <i class="fas fa-info-circle"></i>
+        <strong>Important:</strong> Ce compte recevra automatiquement tous les paiements des clients. 
+        Les virements sont généralement crédités sous 2-3 jours ouvrés.
+    </div>
+
+    <div class="setup-steps">
+        <h3 style="margin-bottom: 20px;">Prochaines étapes</h3>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Créer un compte Stripe</h4>
+                <p>Allez sur stripe.com et créez un compte gratuit. Activez le mode "Connect" pour recevoir des paiements.</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Connecter votre compte bancaire</h4>
+                <p>Dans le dashboard Stripe, ajoutez votre RIB/IBAN pour recevoir les virements automatiques.</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Configurer les clés API</h4>
+                <p>Ajoutez vos clés Stripe dans le fichier .env pour activer les paiements en ligne.</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Tester un paiement</h4>
+                <p>Faites un test avec une commande pour vérifier que l'argent arrive bien sur votre compte.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn-stripe" onclick="setupStripe()">
+            <i class="fab fa-stripe"></i> Connecter Stripe
+        </button>
+        <button class="btn-stripe btn-test" onclick="testPayment()">
+            <i class="fas fa-credit-card"></i> Tester un Paiement
+        </button>
+    </div>
+</div>
+
+<script>
+function setupStripe() {
+    alert('🚀 Redirection vers Stripe Connect...\n\nUtilisez ces informations:\n\nIBAN: FR76 3000 3015 5100 0509 6014 759\nBIC: SOGEFRPP\n\nLes paiements arriveront automatiquement sur ce compte Société Générale.');
+    // window.location.href = 'https://stripe.com/connect';
+}
+
+function testPayment() {
+    alert('💳 Test de paiement\n\n1. Allez sur /checkout/\n2. Choisissez Carte Bancaire\n3. Utilisez: 4242 4242 4242 4242\n4. Date: 12/25, CVC: 123\n\nL\'argent sera crédité sur votre compte en 2-3 jours.');
+    window.location.href = '/checkout/';
+}
+</script>
+
+{% endblock %}

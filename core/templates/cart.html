@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Panier - MultiServe{% endblock %}
+
+{% block content %}
+<style>
+.cart-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.cart-header {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%);
+    border-radius: 20px;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.cart-header h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.empty-cart {
+    text-align: center;
+    padding: 60px 30px;
+    background: var(--card);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+.empty-cart i {
+    font-size: 80px;
+    color: #3b82f6;
+    margin-bottom: 20px;
+}
+
+.empty-cart h2 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.empty-cart p {
+    color: #94a3b8;
+    margin-bottom: 25px;
+}
+
+.cart-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+    border-color: #3b82f6;
+    transform: translateX(5px);
+}
+
+.cart-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-details h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.item-details p {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.item-details .store-name {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.item-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.quantity-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.quantity-btn:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.quantity-value {
+    font-weight: 700;
+    font-size: 16px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.remove-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.remove-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.cart-summary {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid var(--border);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 16px;
+}
+
+.summary-row.total {
+    border-bottom: none;
+    font-size: 24px;
+    font-weight: 700;
+    color: #3b82f6;
+    padding-top: 20px;
+    margin-top: 10px;
+    border-top: 2px solid var(--border);
+}
+
+.checkout-btn {
+    width: 100%;
+    margin-top: 25px;
+    padding: 18px;
+    font-size: 18px;
+}
+
+.continue-shopping {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.continue-shopping a {
+    color: #94a3b8;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s ease;
+}
+
+.continue-shopping a:hover {
+    color: #3b82f6;
+}
+</style>
+
+<div class="cart-container">
+    <div class="cart-header">
+        <h1><i class="fas fa-shopping-cart"></i> Mon Panier</h1>
+        <p id="cart-count-display">0 articles</p>
+    </div>
+
+    <div id="cart-content">
+        <!-- Cart content will be loaded by JavaScript -->
+    </div>
+</div>
+
+<script>
+function loadCart() {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let container = document.getElementById("cart-content");
+    let countDisplay = document.getElementById("cart-count-display");
+    
+    let totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    countDisplay.textContent = totalItems + " article" + (totalItems > 1 ? "s" : "");
+    
+    if (cart.length === 0) {
+        container.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-shopping-basket"></i>
+                <h2>Votre panier est vide</h2>
+                <p>Découvrez nos restaurants et boutiques pour remplir votre panier !</p>
+                <a href="/" class="btn">
+                    <i class="fas fa-arrow-left"></i> Continuer les achats
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let deliveryFee = 2.99;
+    let serviceFee = 1.49;
+    let total = subtotal + deliveryFee + serviceFee;
+    
+    let cartItemsHTML = cart.map((item, index) => `
+        <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}">
+            <div class="item-details">
+                <p class="store-name"><i class="fas fa-store"></i> ${item.store}</p>
+                <h3>${item.name}</h3>
+                <p class="item-price">${(item.price * item.quantity).toFixed(2)}€</p>
+            </div>
+            <div class="quantity-control">
+                <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <span class="quantity-value">${item.quantity}</span>
+                <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <button class="remove-btn" onclick="removeItem(${index})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+    
+    container.innerHTML = `
+        <div class="cart-items">
+            ${cartItemsHTML}
+        </div>
+        
+        <div class="cart-summary">
+            <h2 style="margin-bottom: 20px;"><i class="fas fa-receipt"></i> Résumé</h2>
+            
+            <div class="summary-row">
+                <span>Sous-total</span>
+                <span>${subtotal.toFixed(2)}€</span>
+            </div>
+            <div class="summary-row">
+                <span>Frais de livraison</span>
+                <span>${deliveryFee.toFixed(2)}€</span>
+            </div>
+            <div class="summary-row">
+                <span>Frais de service</span>
+                <span>${serviceFee.toFixed(2)}€</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span>${total.toFixed(2)}€</span>
+            </div>
+            
+            <a href="/checkout/" class="btn checkout-btn">
+                <i class="fas fa-credit-card"></i> Procéder au paiement
+            </a>
+            
+            <div class="continue-shopping">
+                <a href="/">
+                    <i class="fas fa-arrow-left"></i> Continuer les achats
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+function updateQuantity(index, change) {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    
+    cart[index].quantity += change;
+    
+    if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+    }
+    
+    localStorage.setItem("cart", JSON.stringify(cart));
+    loadCart();
+    updateCartCount();
+}
+
+function removeItem(index) {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.splice(index, 1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    loadCart();
+    updateCartCount();
+}
+
+// Load cart on page load
+loadCart();
+</script>
+{% endblock %}

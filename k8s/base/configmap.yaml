@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multiserve-config
+  namespace: multiserve
+data:
+  DEBUG: "False"
+  DB_ENGINE: "postgresql"
+  DB_NAME: "multiserve"
+  DB_USER: "admin"
+  DB_HOST: "multiserve-db"
+  DB_PORT: "5432"
+  REDIS_URL: "redis://multiserve-redis:6379/0"
+  ALLOWED_HOSTS: "*"
+  MEDIA_URL: "/media/"
+  STATIC_URL: "/static/"

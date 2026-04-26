@@ -1,0 +1,169 @@
+# ==========================================
+# Prometheus Alert Rules
+# MultiServe Application Alerts
+# ==========================================
+
+groups:
+  - name: multiserve-alerts
+    interval: 30s
+    rules:
+      # ==========================================
+      # Application Alerts
+      # ==========================================
+      
+      - alert: HighErrorRate
+        expr: rate(django_http_responses_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate detected on {{ $labels.instance }}"
+          description: "Error rate is above 5% (current value: {{ $value | humanizePercentage }})"
+          runbook_url: "https://wiki.internal/runbooks/high-error-rate"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(django_http_request_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High latency detected"
+          description: "p95 latency is above 2 seconds (current: {{ $value }}s)"
+
+      - alert: DjangoAppDown
+        expr: up{job="django-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Django application is down"
+          description: "Django application on {{ $labels.instance }} has been down for more than 1 minute"
+
+      # ==========================================
+      # Database Alerts
+      # ==========================================
+      
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} is not responding"
+
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "PostgreSQL high connection count"
+          description: "PostgreSQL has {{ $value }} active connections (threshold: 80)"
+
+      - alert: PostgreSQLSlowQueries
+        expr: pg_stat_activity_max_tx_duration > 300
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "PostgreSQL slow queries detected"
+          description: "Query running for more than 5 minutes on {{ $labels.instance }}"
+
+      # ==========================================
+      # Redis Alerts
+      # ==========================================
+      
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance {{ $labels.instance }} is not responding"
+
+      - alert: RedisHighMemoryUsage
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is above 90% on {{ $labels.instance }}"
+
+      - alert: RedisConnectionsHigh
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: cache
+        annotations:
+          summary: "Redis high client connections"
+          description: "Redis has {{ $value }} connected clients on {{ $labels.instance }}"
+
+      # ==========================================
+      # Infrastructure Alerts
+      # ==========================================
+      
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 85% (current: {{ $value }}%)"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 90% (current: {{ $value }}%)"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is below 10% (available: {{ $value }}%)"
+
+      - alert: ContainerHighRestartRate
+        expr: rate(container_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} is restarting frequently"
+
+      # ==========================================
+      # Business Metrics Alerts
+      # ==========================================
+      
+      - alert: OrderRateDrop
+        expr: rate(orders_created_total[1h]) < 0.1
+        for: 30m
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Order rate has dropped significantly"
+          description: "Order creation rate is unusually low"

@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement - MultiServe{% endblock %}
+
+{% block content %}
+<style>
+.checkout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+}
+
+@media (max-width: 900px) {
+    .checkout-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.checkout-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid var(--border);
+    margin-bottom: 25px;
+}
+
+.checkout-section h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text);
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.payment-method {
+    padding: 20px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.payment-method:hover,
+.payment-method.selected {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.payment-method.selected {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.payment-method i {
+    font-size: 32px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.payment-method.card i { color: #3b82f6; }
+.payment-method.visa i { color: #1a1f71; }
+.payment-method.paypal i { color: #003087; }
+.payment-method.apple i { color: #000; }
+.payment-method.google i { color: #4285f4; }
+.payment-method.cash i { color: #10b981; }
+
+.payment-method span {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.order-summary {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 100px;
+}
+
+.order-summary h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+.summary-item:last-of-type {
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 15px;
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    font-weight: 700;
+    color: #3b82f6;
+    padding-top: 10px;
+}
+
+.pay-btn {
+    width: 100%;
+    margin-top: 25px;
+    padding: 18px;
+    font-size: 18px;
+}
+
+.security-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 10px;
+    color: #10b981;
+    font-size: 14px;
+}
+
+.card-form {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.card-form.visible {
+    display: block;
+}
+
+.card-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+}
+
+.map-preview {
+    height: 200px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    margin-bottom: 15px;
+}
+
+.map-preview i {
+    font-size: 48px;
+    margin-bottom: 10px;
+    color: #3b82f6;
+}
+
+.locate-btn {
+    width: 100%;
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.locate-btn:hover {
+    background: #3b82f6;
+    color: white;
+}
+</style>
+
+<h1 style="margin-bottom: 30px; text-align: center;">
+    <i class="fas fa-credit-card"></i> Finaliser votre commande
+</h1>
+
+<div class="checkout-container">
+    <div class="checkout-left">
+        <!-- Adresse de livraison -->
+        <div class="checkout-section">
+            <h2><i class="fas fa-map-marker-alt"></i> Adresse de livraison</h2>
+            
+            <div class="map-preview">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Carte de livraison</span>
+            </div>
+            
+            <button class="locate-btn" onclick="getLocation()">
+                <i class="fas fa-location-arrow"></i> Utiliser ma position actuelle
+            </button>
+            
+            <div style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Adresse complète</label>
+                    <input type="text" id="address" placeholder="12 rue de la Paix, 75002 Paris">
+                </div>
+                <div class="form-group">
+                    <label>Instructions pour le livreur (optionnel)</label>
+                    <textarea rows="2" placeholder="Code porte, étage, digicode..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" id="phone" placeholder="06 12 34 56 78">
+                </div>
+            </div>
+        </div>
+
+        <!-- Méthodes de paiement -->
+        <div class="checkout-section">
+            <h2><i class="fas fa-wallet"></i> Méthode de paiement</h2>
+            
+            <div class="payment-methods">
+                <div class="payment-method card selected" onclick="selectPayment('card')">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Carte Bancaire</span>
+                </div>
+                <div class="payment-method visa" onclick="selectPayment('visa')">
+                    <i class="fab fa-cc-visa"></i>
+                    <span>Visa</span>
+                </div>
+                <div class="payment-method paypal" onclick="selectPayment('paypal')">
+                    <i class="fab fa-paypal"></i>
+                    <span>PayPal</span>
+                </div>
+                <div class="payment-method apple" onclick="selectPayment('apple_pay')">
+                    <i class="fab fa-apple"></i>
+                    <span>Apple Pay</span>
+                </div>
+                <div class="payment-method google" onclick="selectPayment('google_pay')">
+                    <i class="fab fa-google-wallet"></i>
+                    <span>Google Pay</span>
+                </div>
+                <div class="payment-method cash" onclick="selectPayment('cash')">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Espèces</span>
+                </div>
+            </div>
+            
+            <div class="card-form visible" id="card-form">
+                <div class="form-group">
+                    <label>Numéro de carte</label>
+                    <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+                </div>
+                <div class="card-row">
+                    <div class="form-group">
+                        <label>Titulaire</label>
+                        <input type="text" placeholder="NOM PRÉNOM">
+                    </div>
+                    <div class="form-group">
+                        <label>Expiration</label>
+                        <input type="text" placeholder="MM/AA" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label>CVC</label>
+                        <input type="text" placeholder="123" maxlength="3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkout-right">
+        <div class="order-summary">
+            <h2><i class="fas fa-receipt"></i> Résumé de la commande</h2>
+            
+            <div id="order-items">
+                <!-- Items will be loaded by JS -->
+            </div>
+            
+            <div class="summary-total">
+                <span>Total</span>
+                <span id="order-total">0.00€</span>
+            </div>
+            
+            <button class="btn pay-btn" onclick="processPayment()">
+                <i class="fas fa-lock"></i> Payer maintenant
+            </button>
+            
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Paiement sécurisé SSL 256-bit</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedPayment = 'card';
+
+function selectPayment(method) {
+    selectedPayment = method;
+    
+    // Remove selected class from all
+    document.querySelectorAll('.payment-method').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked
+    event.currentTarget.classList.add('selected');
+    
+    // Show/hide card form
+    const cardForm = document.getElementById('card-form');
+    if (method === 'card' || method === 'visa') {
+        cardForm.classList.add('visible');
+    } else {
+        cardForm.classList.remove('visible');
+    }
+}
+
+function loadOrderSummary() {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let container = document.getElementById("order-items");
+    
+    if (cart.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #94a3b8;">Votre panier est vide</p>';
+        document.getElementById("order-total").textContent = "0.00€";
+        return;
+    }
+    
+    let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let deliveryFee = 2.99;
+    let serviceFee = 1.49;
+    let total = subtotal + deliveryFee + serviceFee;
+    
+    let itemsHTML = cart.map(item => `
+        <div class="summary-item">
+            <span>${item.quantity}x ${item.name}</span>
+            <span>${(item.price * item.quantity).toFixed(2)}€</span>
+        </div>
+    `).join('');
+    
+    container.innerHTML = `
+        ${itemsHTML}
+        <div class="summary-item">
+            <span>Sous-total</span>
+            <span>${subtotal.toFixed(2)}€</span>
+        </div>
+        <div class="summary-item">
+            <span>Livraison</span>
+            <span>${deliveryFee.toFixed(2)}€</span>
+        </div>
+        <div class="summary-item">
+            <span>Service</span>
+            <span>${serviceFee.toFixed(2)}€</span>
+        </div>
+    `;
+    
+    document.getElementById("order-total").textContent = total.toFixed(2) + "€";
+}
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                let lat = position.coords.latitude;
+                let lng = position.coords.longitude;
+                alert("📍 Position détectée : " + lat.toFixed(4) + ", " + lng.toFixed(4));
+                document.getElementById("address").value = "Position GPS détectée (Lat: " + lat.toFixed(4) + ", Lng: " + lng.toFixed(4) + ")";
+            },
+            (error) => {
+                alert("❌ Impossible d'obtenir votre position. Veuillez entrer votre adresse manuellement.");
+            }
+        );
+    } else {
+        alert("❌ La géolocalisation n'est pas supportée par votre navigateur.");
+    }
+}
+
+function processPayment() {
+    let address = document.getElementById("address").value;
+    let phone = document.getElementById("phone").value;
+    
+    if (!address || !phone) {
+        alert("⚠️ Veuillez remplir l'adresse et le téléphone");
+        return;
+    }
+    
+    let paymentNames = {
+        'card': 'Carte Bancaire',
+        'visa': 'Visa',
+        'paypal': 'PayPal',
+        'apple_pay': 'Apple Pay',
+        'google_pay': 'Google Pay',
+        'cash': 'Espèces'
+    };
+    
+    // Simulate payment processing
+    let btn = document.querySelector('.pay-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        alert("✅ Paiement réussi avec " + paymentNames[selectedPayment] + " !\n\nVotre commande a été confirmée. Vous pouvez suivre votre livraison en temps réel.");
+        localStorage.removeItem("cart");
+        window.location.href = "/livraison/";
+    }, 2000);
+}
+
+// Load order summary on page load
+loadOrderSummary();
+</script>
+{% endblock %}
