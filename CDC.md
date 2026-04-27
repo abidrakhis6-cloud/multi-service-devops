@@ -939,7 +939,136 @@ kubectl port-forward svc/grafana 3000:3000 -n monitoring
 
 ---
 
-**Document version**: 1.0  
-**Date**: 13 Avril 2026  
+**Document version**: 2.0  
+**Date**: 27 Avril 2026  
 **Auteur**: Équipe MultiServe DevOps  
-**Approbation**: En attente
+**Approbation**: En cours
+
+---
+
+## 11. ARCHITECTURE CIBLE DÉTAILLÉE
+
+### 11.1 Vue d'ensemble de l'architecture de production
+
+L'architecture cible de MultiServe repose sur une infrastructure cloud AWS entièrement provisionnée via Terraform (IaC), orchestrée par Kubernetes (EKS), et monitorée par la stack Prometheus/Grafana.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           FLUX DE TRAFIC PRODUCTION                          │
+│                                                                              │
+│  Utilisateurs ──► CloudFront (CDN) ──► ALB (SSL Termination)               │
+│                                              │                               │
+│                                     ┌────────▼────────┐                      │
+│                                     │  EKS Cluster     │                      │
+│                                     │  (3x t3.medium)  │                      │
+│                                     │  Django + Celery  │                      │
+│                                     └──┬─────┬─────┬───┘                      │
+│                                        │     │     │                          │
+│                              ┌─────────▼┐ ┌──▼───┐ ┌▼────────┐               │
+│                              │ RDS PG   │ │Redis │ │ S3 Media│               │
+│                              │ (Multi-AZ│ │Cache │ │ Bucket  │               │
+│                              └──────────┘ └──────┘ └─────────┘               │
+│                                                                              │
+│  Monitoring: Prometheus ──► Alertmanager ──► Grafana                        │
+│  CI/CD: GitHub Actions ──► ECR ──► EKS (kubectl)                           │
+│  IaC: Terraform (S3 backend + DynamoDB lock)                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 11.2 Composants de l'architecture cible
+
+| Composant | Service AWS | Rôle | Redondance |
+|-----------|------------|------|------------|
+| **CDN** | CloudFront | Distribution statique, cache edge | Global |
+| **Load Balancer** | ALB | Distribution trafic, SSL termination | Multi-AZ |
+| **Orchestration** | EKS v1.28 | Gestion conteneurs, auto-scaling | 3 nodes min |
+| **Base de données** | RDS PostgreSQL | Stockage persistant ACID | Multi-AZ |
+| **Cache/Sessions** | ElastiCache Redis | Cache API, sessions, pub/sub | Replica |
+| **Stockage média** | S3 Bucket | Images, documents, uploads | Versionné |
+| **Registry** | ECR | Images Docker applicatives | Encrypté |
+| **Monitoring** | Prometheus + Grafana | Métriques, dashboards, alertes | Persisté |
+| **Alerting** | Alertmanager | Routage et notifications d'alertes | Intégré |
+| **IaC** | Terraform + S3 + DynamoDB | Provisioning reproductible | State locké |
+| **CI/CD** | GitHub Actions | Test, build, scan, deploy | Multi-branch |
+
+### 11.3 Flux réseau et sécurité
+
+| Flux | Source → Destination | Port | Security Group |
+|------|---------------------|------|----------------|
+| Public → ALB | Internet → ALB | 80, 443 | sg_alb |
+| ALB → EKS | ALB → Node Group | 8000 | sg_eks |
+| EKS → RDS | Pods → PostgreSQL | 5432 | sg_rds |
+| EKS → Redis | Pods → ElastiCache | 6379 | sg_elasticache |
+| EKS → S3 | Pods → S3 API | 443 | IAM Role |
+| Prometheus → Exporters | Prometheus → Targets | 9100,9187,9121 | sg_monitoring |
+| Alertmanager → SMTP | Alertmanager → Email | 587 | Outbound |
+
+### 11.4 Schéma d'architecture
+
+Le schéma d'architecture détaillé est disponible dans le fichier `architecture.drawio` (format draw.io), montrant :
+- VPC avec segmentation en 3 tiers de subnets (Public / Private App / Private DB)
+- EKS Cluster avec 3 worker nodes et HPA
+- RDS PostgreSQL en Multi-AZ avec chiffrement
+- ElastiCache Redis avec replica
+- Application Load Balancer avec SSL termination
+- Stack de monitoring (Prometheus + Grafana + Alertmanager)
+- Flux CI/CD (GitHub Actions → ECR → EKS)
+- Terraform IaC avec S3 backend
+
+## 12. CONTRAINTES ET LIMITES
+
+### 12.1 Contraintes techniques
+
+| Contrainte | Impact | Mitigation |
+|------------|--------|------------|
+| **Free Tier AWS** | RDS db.t3.micro limité (20 Go, pas de Multi-AZ) | Upgrade quand le trafic le nécessite |
+| **EKS AMI** | Version 1.28 non supportée en eu-west-3 pour node group | Utiliser AMI custom ou eksctl |
+| **RDS versions** | PostgreSQL 13.x non disponible en eu-west-3 | Utiliser version 15.x validée par AWS |
+| **Mémoire Redis** | cache.t3.micro = ~300 Mo | Surveiller via alerte RedisHighMemoryUsage |
+| **EKS coût minimum** | ~$73/mois pour le control plane | Accepté pour la certification |
+
+### 12.2 Contraintes organisationnelles
+
+| Contrainte | Description |
+|------------|-------------|
+| **Équipe réduite** | 1 DevOps, pas de team dédiée 24/7 |
+| **Budget limité** | Free Tier AWS + ressources minimales |
+| **Délai** | Déploiement fonctionnel en 6 semaines |
+| **Certification** | Démontrer les compétences DevOps (IaC, CI/CD, monitoring, sécurité) |
+
+### 12.3 Risques identifiés
+
+| Risque | Probabilité | Impact | Mitigation |
+|--------|------------|--------|------------|
+| Dépassement Free Tier | Moyen | Financier | Alerttes CloudWatch sur coûts |
+| Version EKS obsolète | Faible | Technique | Upgrade planifié chaque trimestre |
+| Perte de données RDS | Faible | Critique | Backup quotidien + snapshot |
+| Fuite de credentials | Faible | Critique | .env gitignoré + GitHub Secrets + scan Trivy |
+
+## 13. JUSTIFICATION DES CHOIX TECHNIQUES
+
+Les choix techniques détaillés sont documentés dans `CHOIX_TECHNIQUES.md`. Résumé :
+
+- **EKS vs ECS** : Portabilité Kubernetes, écosystème Helm/Kustomize, standard industrie
+- **ElastiCache Redis vs Memcached** : Persistance, pub/sub (WebSocket), structures avancées
+- **RDS PostgreSQL vs Aurora** : Compatibilité Django ORM, Free Tier, maturité
+- **Terraform vs CloudFormation** : Multi-cloud, communauté, workflow plan/apply
+- **GitHub Actions vs Jenkins** : Intégration native, marketplace, coût gratuit
+- **Prometheus/Grafana vs CloudWatch** : Standard CNCF, open source, portabilité
+- **Nginx vs Traefik** : Performance static files, recommandation Django
+
+## 14. COHÉRENCE AVEC LES BLOCS REAC
+
+| Bloc REAC | Couverture dans le projet | Preuves |
+|-----------|--------------------------|---------|
+| **Script** | Dockerfile multi-stage, docker-compose.yml, scripts Terraform | `Dockerfile`, `docker-compose.yml` |
+| **IaC** | Terraform complet (VPC, EKS, RDS, ElastiCache, ALB, S3, ECR) | `terraform/main.tf`, `variables.tf` |
+| **Sécurité** | Credentials via .env, scan Trivy + Bandit, SG restrictifs, containers non-root | `.env.example`, `.github/workflows/ci-cd.yml` |
+| **Mise en production** | CI/CD GitHub Actions + Terraform apply | `.github/workflows/ci-cd.yml` |
+| **Environnement de test** | CI lance tests unitaires + intégration, staging via Kustomize overlay | `k8s/overlays/staging/` |
+| **Stockage** | RDS PostgreSQL + ElastiCache Redis + S3 media + Docker volumes | `terraform/main.tf` |
+| **Containers** | Dockerfile multi-stage + docker-compose 7 services | `Dockerfile`, `docker-compose.yml` |
+| **CI/CD** | GitHub Actions multi-branches (test → build → scan → deploy) | `.github/workflows/ci-cd.yml` |
+| **Métriques** | Prometheus configuré + 14 alertes définies + Alertmanager | `monitoring/prometheus/`, `monitoring/alertmanager/` |
+| **Supervision** | Prometheus + Grafana + Alertmanager + Exporters | `monitoring/` |
+| **Anglais** | Non évaluable dans ce livrable | - |
