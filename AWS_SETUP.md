@@ -1,39 +1,70 @@
 # AWS Setup Guide - MultiServe
 
-## 🔑 Vos Identifiants AWS
+## 🔑 Identifiants AWS
 
 ### Access Keys (IAM User: Aboudi)
-⚠️ **NE PAS COMMITTE LES VRAIES CLÉS** - Utilise GitHub Secrets
+⚠️ **NE PAS COMMITTER LES VRAIES CLÉS** - Utilise GitHub Secrets
 ```
 AWS_ACCESS_KEY_ID=your-access-key-id
 AWS_SECRET_ACCESS_KEY=your-secret-access-key
 AWS_REGION=eu-west-3
 ```
 
-### Bucket S3
+### Bucket S3 (Terraform State)
 ```
-AWS_STORAGE_BUCKET_NAME=multiserve-user-data
+S3_STATE_BUCKET=multiserve-terraform-state
+DYNAMODB_LOCK_TABLE=multiserve-terraform-locks
 ```
-✅ **Créé avec succès** (Europe - Paris)
+✅ **Créés avec succès** (Europe - Paris)
 
 ---
 
-## 📋 Les ARNs - Lesquels utiliser ?
+## 🚀 Architecture AWS - EKS Kubernetes
 
-### ❌ ARN Utilisateur IAM (PAS utilisé pour GitHub Actions)
-```
-arn:aws:iam::987569578101:user/Aboudi
-```
-> C'est juste l'identifiant de ton utilisateur. **On ne l'utilise pas** dans le code.
+**Choix retenu : EKS (Kubernetes)** — voir justification dans `CHOIX_TECHNIQUES.md`
 
-### ❌ ARN Instance EC2 (PAS utilisé pour GitHub Actions)
 ```
-arn:aws:ec2:eu-north-1:987569578101:instance/i-004c97f25915c1f7e
+┌─────────────────┐
+│   GitHub Repo   │
+└────────┬────────┘
+         │ Push
+         ▼
+┌─────────────────┐     ┌──────────────┐
+│  GitHub Actions │────▶│  Amazon ECR  │
+│   CI/CD Pipeline│     │ (Docker Image)│
+│   + Trivy Scan  │     └──────────────┘
+└────────┬────────┘
+         │ kubectl apply
+         ▼
+┌─────────────────┐     ┌──────────────┐
+│  Amazon EKS     │────▶│   AWS RDS    │
+│  (Kubernetes    │     │ (PostgreSQL) │
+│   3x t3.medium) │     └──────────────┘
+└────────┬────────┘
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+┌──────┐┌──────┐┌──────┐
+│ S3   ││Elasti││AWS   │
+│Media ││Cache ││Secrets│
+│Bucket││Redis ││Mgr   │
+└──────┘└──────┘└──────┘
 ```
-> C'est l'identifiant de ton serveur virtuel existant. **On n'en a pas besoin** car on déploie sur **ECS Fargate** (serverless), pas sur EC2.
 
-### ✅ Ce qu'on utilise pour GitHub Actions
-On utilise les **Access Keys directement** dans GitHub Secrets. Pas besoin de Role ARN !
+### Terraform IaC
+
+L'infrastructure complète est provisionnée via Terraform (`terraform/main.tf`) :
+
+| Ressource | Type | Statut |
+|-----------|------|--------|
+| **VPC** | 10.0.0.0/16, 6 subnets | ✅ Déployé |
+| **EKS Cluster** | v1.28, 3 nodes t3.medium | ✅ Déployé |
+| **RDS PostgreSQL** | db.t3.micro, encrypted | ⏳ Version à corriger |
+| **ElastiCache Redis** | cache.t3.micro | ✅ Déployé |
+| **ALB** | Application Load Balancer | ✅ Configuré |
+| **S3** | Media + Terraform State | ✅ Déployé |
+| **ECR** | Docker Registry | ✅ Déployé |
+| **Security Groups** | ALB/EKS/RDS/Redis/Monitoring | ✅ Déployé |
 
 ---
 
@@ -46,65 +77,19 @@ Va dans ton repo GitHub → Settings → Secrets and variables → Actions
 | `AWS_ACCESS_KEY_ID` | `your-access-key-id` |
 | `AWS_SECRET_ACCESS_KEY` | `your-secret-access-key` |
 | `AWS_REGION` | `eu-west-3` |
-| `AWS_STORAGE_BUCKET_NAME` | `multiserve-user-data` |
 
 ---
 
-## 🚀 Architecture AWS
+## 📝 Pourquoi EKS et non ECS Fargate ?
 
-```
-┌─────────────────┐
-│   GitHub Repo   │
-└────────┬────────┘
-         │ Push
-         ▼
-┌─────────────────┐     ┌──────────────┐
-│  GitHub Actions │────▶│  Amazon ECR  │
-│   CI/CD Pipeline│     │ (Docker Image)│
-└─────────────────┘     └──────────────┘
-         │
-         ▼
-┌─────────────────┐     ┌──────────────┐
-│   Amazon ECS    │────▶│   AWS RDS    │
-│   (Fargate)     │     │ (PostgreSQL) │
-│  Ton Application│     └──────────────┘
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌──────────────┐
-│  Amazon S3      │◀───│ AWS Secrets  │
-│ (User Data JSON)│     │  Manager     │
-└─────────────────┘     └──────────────┘
-```
-
----
-
-## 📦 Services AWS Utilisés
-
-| Service | Usage | Statut |
-|---------|-------|--------|
-| **IAM** | Gestion des accès | ✅ User + Keys créés |
-| **S3** | Stockage données utilisateurs | ✅ Bucket créé |
-| **ECR** | Registry Docker | ⏳ À créer |
-| **ECS** | Hébergement conteneurs | ⏳ À créer |
-| **RDS** | Base de données PostgreSQL | ⏳ À créer |
-| **ElastiCache** | Cache Redis | ⏳ À créer |
-
----
-
-## 📝 Récapitulatif
-
-- ✅ **Access Keys** : Utilisées pour GitHub Actions
-- ✅ **Bucket S3** : `multiserve-user-data` créé
-- ❌ **Role ARN** : **PAS nécessaire** avec les Access Keys
-- ❌ **EC2 ARN** : **PAS utilisé** (on utilise ECS, pas EC2)
+EKS (Kubernetes) a été retenu pour trois raisons : **portabilité** — les manifests Kubernetes et le workflow CI/CD sont réutilisables sur GKE, AKS ou tout cluster k8s sans réécriture ; **écosystème** — Helm, Kustomize, HPA et les ServiceMonitors offrent un contrôle granulaire du déploiement, du scaling et du monitoring que ECS ne propose pas nativement ; **compétences** — Kubernetes est le standard industrie (CNCF) et démontre une maîtrise plus large de l'orchestration conteneurisée, ce qui est attendu dans une certification DevOps.
 
 ---
 
 ## 🎯 Prochaines Étapes
 
-1. ✅ Ajouter les 4 secrets dans GitHub
-2. ⏳ Créer ECR Repository
-3. ⏳ Créer ECS Cluster + Service
-4. ⏳ Créer RDS PostgreSQL
-5. 🚀 Push sur main → Déploiement automatique !
+1. ✅ Terraform IaC déployé (VPC, EKS, Redis, S3, ECR)
+2. ⏳ Corriger version RDS PostgreSQL compatible eu-west-3
+3. ⏳ Réactiver EKS Node Group (AMI compatible)
+4. ✅ CI/CD GitHub Actions configuré (test → build → scan Trivy → deploy)
+5. ✅ Monitoring Prometheus + Grafana + Alertmanager configuré
