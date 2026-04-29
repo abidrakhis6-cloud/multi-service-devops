@@ -2,95 +2,82 @@
 
 ## 1. Orchestration : Pourquoi EKS et non ECS ?
 
-| Critère | EKS (choisi) | ECS | Justification |
-|---------|-------------|-----|---------------|
-| **Portabilité** | Standard Kubernetes (k8s) | Propriétaire AWS | EKS permet de migrer vers GKE/AKS sans réécriture |
-| **Écosystème** | Helm, Kustomize, Istio, ArgoCD | Task Definitions AWS | L'écosystème K8s est plus riche et standard industrie |
-| **Auto-scaling** | HPA + Cluster Autoscaler | Service Auto Scaling | HPA K8s offre un contrôle plus granulaire |
-| **CI/CD** | kubectl apply, Helm, GitOps | AWS CLI, Copilot | K8s s'intègre nativement avec les pipelines GitOps |
-| **Communauté** | CNCF, large communauté | AWS uniquement | EKS bénéficie de la communauté Kubernetes mondiale |
-| **Multi-cloud** | Possible (GKE, AKS) | Verrouillé AWS | EKS prépare une stratégie multi-cloud future |
+EKS (Kubernetes) a été retenu pour trois raisons : **portabilité** — les manifests Kubernetes et le workflow CI/CD sont réutilisables sur GKE, AKS ou tout cluster k8s sans réécriture ; **écosystème** — Helm, Kustomize, HPA et les ServiceMonitors offrent un contrôle granulaire du déploiement, du scaling et du monitoring que ECS ne propose pas nativement ; **compétences** — Kubernetes est le standard industrie (CNCF) et démontre une maîtrise plus large de l'orchestration conteneurisée, ce qui est attendu dans une certification DevOps.
 
-**Décision** : EKS pour la portabilité, l'écosystème riche et l'alignement avec les standards du marché.
+| Critère | EKS (choisi) | ECS Fargate | EC2 | Justification |
+|---------|-------------|-------------|-----|---------------|
+| **Portabilité** | Standard K8s | Propriétaire AWS | N/A | EKS permet de migrer vers GKE/AKS |
+| **Écosystème** | Helm, Kustomize, Istio | Task Definitions | AMI | K8s offre un contrôle granulaire |
+| **Auto-scaling** | HPA + Cluster Autoscaler | Service Auto Scaling | ASG | HPA plus précis sur les métriques |
+| **Monitoring** | ServiceMonitor + Prom Operator | CloudWatch + Container Insights | CloudWatch | K8s intègre nativement Prometheus |
+| **CI/CD** | kubectl, Helm, GitOps | AWS CLI, Copilot | SSH/Ansible | GitOps est le standard DevOps |
+| **Coût** | ~$73/mois control plane | Pay per task | Pay per instance | ECS moins cher mais moins flexible |
 
 ## 2. Cache : Pourquoi ElastiCache Redis ?
 
 | Critère | ElastiCache Redis (choisi) | Memcached | DynamoDB DAX | Justification |
 |---------|---------------------------|-----------|--------------|---------------|
-| **Persistance** | Oui (AOF/RDB) | Non | Non | Redis persiste les données même en cas de redémarrage |
-| **Pub/Sub** | Oui | Non | Non | Nécessaire pour Django Channels (WebSocket temps réel) |
-| **Structures** | Hash, List, Set, Sorted Set | Key-Value uniquement | Key-Value | Structures avancées pour sessions, cache, files d'attente |
-| **Haute disponibilité** | Multi-AZ + Replica | Non | Oui | Redis supporte le failover automatique |
-| **Sessions Django** | Natif | Limité | Non | Backend de sessions Django recommandé pour Redis |
-
-**Décision** : ElastiCache Redis pour la persistance, le pub/sub (WebSocket), et les structures de données avancées.
+| **Persistance** | Oui (AOF/RDB) | Non | Non | Redis persiste les données |
+| **Pub/Sub** | Oui | Non | Non | Nécessaire pour Django Channels (WebSocket) |
+| **Structures** | Hash, List, Set, Sorted Set | Key-Value | Key-Value | Structures avancées pour sessions/cache |
+| **Haute disponibilité** | Multi-AZ + Replica | Non | Oui | Redis supporte le failover |
 
 ## 3. Base de données : Pourquoi RDS PostgreSQL ?
 
-| Critère | RDS PostgreSQL (choisi) | Aurora PostgreSQL | DynamoDB | Justification |
-|---------|------------------------|-------------------|----------|---------------|
-| **Compatibilité Django** | ORM natif | Compatible | Non | Django ORM supporte PostgreSQL nativement |
-| **ACID** | Oui | Oui | Éventuel | Transactions fiables pour commandes et paiements |
-| **JSON Support** | JSONB | JSONB | Natif | Stockage flexible pour produits variables |
-| **Coût** | Modéré (Free Tier) | Élevé | Pay per request | RDS t3.micro éligible Free Tier AWS |
-| **Recherche** | Full-text search | Full-text search | Scan | Recherche textuelle intégrée pour catalogue |
-
-**Décision** : RDS PostgreSQL pour la maturité Django, le support ACID, et l'éligibilité Free Tier.
+| Critère | RDS PostgreSQL (choisi) | Aurora | DynamoDB | Justification |
+|---------|------------------------|--------|----------|---------------|
+| **Compatibilité Django** | ORM natif | Compatible | Non | Django ORM supporte PostgreSQL |
+| **ACID** | Oui | Oui | Éventuel | Transactions fiables pour paiements |
+| **Coût** | Free Tier (db.t3.micro) | Élevé | Pay/request | RDS éligible Free Tier |
 
 ## 4. Infrastructure as Code : Pourquoi Terraform ?
 
-| Critère | Terraform (choisi) | CloudFormation | Pulumi | CDK | Justification |
-|---------|-------------------|----------------|--------|-----|---------------|
-| **Multi-cloud** | Oui | AWS uniquement | Oui | AWS uniquement | Terraform est cloud-agnostic |
-| **Langage** | HCL déclaratif | YAML/JSON | Python/JS | Python/TS | HCL est lisible et déclaratif |
-| **State** | S3 + DynamoDB (remote) | Automatique | Automatique | Automatique | State management explicite et contrôlable |
-| **Communauté** | Très large | AWS uniquement | Croissante | AWS | Plus de modules et d'exemples disponibles |
-| **Plan** | `terraform plan` | Change sets | Preview | Diff | Visualisation des changements avant application |
-
-**Décision** : Terraform pour la portabilité multi-cloud, la communauté, et le workflow plan/apply.
+| Critère | Terraform (choisi) | CloudFormation | Justification |
+|---------|-------------------|----------------|---------------|
+| **Multi-cloud** | Oui | AWS uniquement | Portabilité |
+| **State** | S3 + DynamoDB (contrôlé) | Automatique | State management explicite |
+| **Plan** | `terraform plan` | Change sets | Visualisation avant application |
 
 ## 5. CI/CD : Pourquoi GitHub Actions ?
 
-| Critère | GitHub Actions (choisi) | GitLab CI | Jenkins | CircleCI | Justification |
-|---------|------------------------|-----------|---------|----------|---------------|
-| **Intégration** | Native GitHub | Native GitLab | Plugin | API | Le code est hébergé sur GitHub |
-| **Marketplace** | 20 000+ actions | Templates limités | Plugins | Orbs | Réutilisation massive d'actions |
-| **Coût** | Gratuit (public/2000min privé) | Gratuit (limité) | Self-hosted | Payant | GitHub Actions gratuit pour les dépôts publics |
-| **Configuration** | YAML dans `.github/` | `.gitlab-ci.yml` | Jenkinsfile | `.circleci/` | Configuration versionnée avec le code |
-
-**Décision** : GitHub Actions pour l'intégration native, le marketplace riche, et le coût.
+| Critère | GitHub Actions (choisi) | Jenkins | Justification |
+|---------|------------------------|---------|---------------|
+| **Intégration** | Native GitHub | Plugin | Code hébergé sur GitHub |
+| **Marketplace** | 20 000+ actions | Plugins | Réutilisation massive |
+| **Coût** | Gratuit (public) | Self-hosted | Coût nul |
 
 ## 6. Monitoring : Pourquoi Prometheus + Grafana ?
 
-| Critère | Prometheus + Grafana (choisi) | CloudWatch | Datadog | Justification |
-|---------|-------------------------------|------------|---------|---------------|
-| **Coût** | Gratuit (OSS) | Inclus AWS | Payant | Prometheus/Grafana sont open source |
-| **Alerting** | Alertmanager natif | Alarms | Monitors | Alertmanager offre un routing sophistiqué |
-| **Dashboards** | Communauté massive | Basique | Riche | Grafana a la plus grande bibliothèque de dashboards |
-| **Portabilité** | Standard industrie | AWS uniquement | SaaS | Prometheus est le standard CNCF de fait |
-| **Pull model** | Oui (scrape) | Push | Push/Agent | Pull model plus simple et plus fiable |
+| Critère | Prometheus + Grafana (choisi) | CloudWatch | Justification |
+|---------|-------------------------------|------------|---------------|
+| **Coût** | Gratuit (OSS) | Inclus AWS | Open source |
+| **Alerting** | Alertmanager natif | Alarms | Routing sophistiqué |
+| **Portabilité** | Standard CNCF | AWS uniquement | Standard industrie |
 
-**Décision** : Prometheus + Grafana pour le standard industrie, le coût, et la portabilité.
+### Monitoring sur EKS : Comment Prometheus scrape-t-il les conteneurs ?
+
+En production EKS, Prometheus est déployé dans le cluster via la Prometheus Operator. Le scraping fonctionne ainsi :
+
+1. **ServiceMonitor** : Un objet K8s (`k8s/base/servicemonitor.yaml`) déclare automatiquement les cibles à scraper en sélectionnant les pods par labels (`app: multiserve`). Pas de configuration manuelle.
+2. **kubernetes_sd_configs** : Prometheus découvre les pods via l'API Kubernetes (voir `monitoring/prometheus/prometheus.yml` section `kubernetes-pods`). Les pods annotés avec `prometheus.io/scrape: "true"` sont automatiquement scrapés.
+3. **CloudWatch comme complément** : Container Insights fournit les métriques infrastructure (CPU/mémoire node) que Prometheus ne voit pas, via l'exporter `cloudwatch-exporter`.
+
+En local (docker-compose), les cibles sont définies via `static_configs` avec les noms DNS Docker (`app:8000`, `node-exporter:9100`).
 
 ## 7. Reverse Proxy : Pourquoi Nginx ?
 
-| Critère | Nginx (choisi) | Traefik | HAProxy | Envoy | Justification |
-|---------|---------------|---------|---------|-------|---------------|
-| **Performance** | Très haute | Bonne | Haute | Haute | Nginx est le standard pour servir Django |
-| **SSL Termination** | Natif | Automatique | Natif | Natif | SSL/TLS simple et bien documenté |
-| **Static Files** | Excellent | Non prévu | Non | Non | Nginx sert les fichiers static/media efficacement |
-| **Intégration Django** | Standard | Docker-only | Général | K8s | Nginx est la recommandation officielle Django |
-
-**Décision** : Nginx pour la performance, le service de fichiers statiques, et la recommandation Django.
+| Critère | Nginx (choisi) | Traefik | Justification |
+|---------|---------------|---------|---------------|
+| **Static Files** | Excellent | Non prévu | Nginx sert les fichiers statiques |
+| **Intégration Django** | Standard | Docker-only | Recommandation officielle Django |
 
 ## 8. Sécurité : Mesures Implémentées
 
 | Couche | Mesure | Implémentation |
 |--------|--------|---------------|
-| **Code** | Scan vulnérabilités | Bandit (Python) + Trivy (Docker) dans CI/CD |
-| **Images** | Scan CVE | Trivy action avec seuil CRITICAL/HIGH |
+| **Code** | Scan vulnérabilités | Bandit + Trivy dans CI/CD |
 | **Secrets** | Pas de credentials en clair | `.env` (gitignoré) + GitHub Secrets + AWS Secrets Manager |
-| **Réseau** | Segmentation | VPC + Security Groups par couche (ALB/App/DB/Redis) |
+| **Réseau** | Segmentation | VPC + Security Groups par couche (ALB seul en 0.0.0.0/0:80,443) |
 | **Containers** | Non-root | Utilisateur `django` (UID 1000) dans Dockerfile |
 | **Base de données** | Chiffrement | RDS gp3 encrypted at rest + TLS in transit |
 | **Cache** | Authentification | Redis `requirepass` obligatoire |
