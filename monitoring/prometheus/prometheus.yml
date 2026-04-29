@@ -14,7 +14,7 @@ global:
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: ['multiserve_alertmanager:9093']
+        - targets: ['host.docker.internal:9093']
 
 # Load rules
 rule_files:
