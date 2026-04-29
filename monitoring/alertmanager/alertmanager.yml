@@ -50,8 +50,10 @@ inhibit_rules:
 receivers:
   - name: 'default'
     webhook_configs:
-      - url: 'http://alertmanager-webhook:8080/alerts'
+      - url: 'https://httpbin.org/post'
         send_resolved: true
+      # Webhook de test - remplacer par votre URL Discord/Slack
+      # Exemple Discord: https://discord.com/api/webhooks/ID/TOKEN
 
   - name: 'critical-alerts'
     email_configs:

@@ -8,6 +8,20 @@ groups:
     interval: 30s
     rules:
       # ==========================================
+      # Test Alert (Manual trigger for demo)
+      # ==========================================
+      
+      - alert: TestAlertAlwaysFiring
+        expr: vector(1)
+        for: 0s
+        labels:
+          severity: warning
+          team: demo
+        annotations:
+          summary: "Test alert - Always firing for demo purposes"
+          description: "This alert is always active to demonstrate Alertmanager webhook functionality."
+      
+      # ==========================================
       # Application Alerts
       # ==========================================
       
