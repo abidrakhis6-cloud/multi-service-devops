@@ -780,6 +780,17 @@ spec:
 
 ## 7. MONITORING & OBSERVABILITY
 
+### 7.0 URLs d'accès au Monitoring (Local)
+
+| Service | URL | Credentials | Statut |
+|---------|-----|-------------|--------|
+| **Grafana** | http://127.0.0.1:3001 | admin / admin123 | ✅ Fonctionnel |
+| **Prometheus** | http://localhost:9090 | (aucune) | ✅ Fonctionnel |
+| **Alertmanager** | http://localhost:9093 | (aucune) | ✅ Fonctionnel |
+| **Node Exporter** | http://localhost:9100/metrics | (aucune) | ✅ Fonctionnel |
+
+> **Note :** Sur Windows avec Docker Desktop, utiliser `127.0.0.1` pour Grafana au lieu de `localhost` en raison du port forwarding.
+
 ### 7.1 Métriques Prometheus
 
 ```yaml
@@ -1005,15 +1016,21 @@ L'architecture cible de MultiServe repose sur une infrastructure cloud AWS enti�
 
 ### 11.4 Schéma d'architecture
 
-Le schéma d'architecture détaillé est disponible dans le fichier `architecture.drawio` (format draw.io), montrant :
+Le schéma d'architecture détaillé est disponible dans deux formats :
+- **`architecture.drawio`** : Format éditable (draw.io/diagrams.net)
+- **`architecture.svg`** : Format image vectoriel pour visualisation directe
+
+**Le schéma montre :**
 - VPC avec segmentation en 3 tiers de subnets (Public / Private App / Private DB)
 - EKS Cluster avec 3 worker nodes et HPA
 - RDS PostgreSQL en Multi-AZ avec chiffrement
 - ElastiCache Redis avec replica
 - Application Load Balancer avec SSL termination
-- Stack de monitoring (Prometheus + Grafana + Alertmanager)
+- Stack de monitoring (Prometheus + Grafana + Alertmanager) - ✅ **Fonctionnel en local**
 - Flux CI/CD (GitHub Actions → ECR → EKS)
 - Terraform IaC avec S3 backend
+
+> **Statut du monitoring local :** Prometheus, Grafana (http://127.0.0.1:3001) et Alertmanager sont fonctionnels avec Node Exporter pour les métriques système.
 
 ## 12. CONTRAINTES ET LIMITES
 
