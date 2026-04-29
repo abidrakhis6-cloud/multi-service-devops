@@ -59,20 +59,22 @@ jobs:
           pip install pytest pytest-django pytest-cov black flake8 bandit safety 2>&1 || true
 
       - name: Lint with flake8
-        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-        continue-on-error: true
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # CI fails on lint errors to enforce code quality standards
 
       - name: Format check with black
-        run: black --check . || true
-        continue-on-error: true
+        run: black --check .
+        # CI fails on format errors to enforce code quality standards
 
       - name: Security scan with Bandit
         run: bandit -r . -f json -o bandit-report.json || true
         continue-on-error: true
+        # Security scan may have false positives; logs generated for review
 
       - name: Dependency vulnerability check
         run: safety check || true
         continue-on-error: true
+        # Dependency check may flag outdated packages; review bandit-report.json
 
       - name: Run tests with pytest
         env:
