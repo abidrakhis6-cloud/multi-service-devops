@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 22px; font-weight: bold; fill: #1a1a2e; }
+      .subtitle { font-size: 13px; fill: #555; }
+      .box { rx: 8; ry: 8; stroke-width: 2; }
+      .label { font-size: 12px; font-weight: bold; fill: #fff; }
+      .detail { font-size: 10px; fill: #ddd; }
+      .small { font-size: 10px; fill: #666; }
+      .arrow { stroke: #999; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .dashed { stroke-dasharray: 8 4; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#999"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#f8f9fa" rx="12"/>
+
+  <!-- Title -->
+  <text x="600" y="35" class="title" text-anchor="middle">MultiServe — Architecture AWS Production</text>
+  <text x="600" y="52" class="subtitle" text-anchor="middle">EKS Kubernetes | Terraform IaC | eu-west-3</text>
+
+  <!-- ==================== USERS ==================== -->
+  <rect x="510" y="70" width="180" height="45" fill="#4a90d9" class="box" stroke="#2d6cb4"/>
+  <text x="600" y="90" class="label" text-anchor="middle">👥 Utilisateurs</text>
+  <text x="600" y="105" class="detail" text-anchor="middle">Web / Mobile / Admin</text>
+
+  <!-- Arrow Users -> CDN -->
+  <path d="M600,115 L600,140" class="arrow"/>
+
+  <!-- CDN -->
+  <rect x="510" y="140" width="180" height="35" fill="#9b59b6" class="box" stroke="#7d3c98"/>
+  <text x="600" y="163" class="label" text-anchor="middle">☁️ CloudFront CDN</text>
+
+  <!-- Arrow CDN -> ALB -->
+  <path d="M600,175 L600,210" class="arrow"/>
+
+  <!-- ==================== VPC ==================== -->
+  <rect x="50" y="210" width="1100" height="660" fill="#f0f4f8" class="box" stroke="#bbb" stroke-dasharray="12 6"/>
+  <text x="70" y="235" font-size="15" font-weight="bold" fill="#444">AWS VPC — 10.0.0.0/16</text>
+
+  <!-- ==================== PUBLIC SUBNETS ==================== -->
+  <rect x="80" y="250" width="1040" height="90" fill="#fff8e1" class="box" stroke="#f0c040"/>
+  <text x="100" y="270" font-size="12" font-weight="bold" fill="#8a6d00">Public Subnets (10.0.1.0/24 | 10.0.2.0/24)</text>
+
+  <!-- ALB -->
+  <rect x="150" y="280" width="180" height="50" fill="#4a90d9" class="box" stroke="#2d6cb4"/>
+  <text x="240" y="300" class="label" text-anchor="middle">🔀 Load Balancer</text>
+  <text x="240" y="315" class="detail" text-anchor="middle">ALB — Port 80/443 SSL</text>
+
+  <!-- NAT -->
+  <rect x="420" y="280" width="140" height="50" fill="#4a90d9" class="box" stroke="#2d6cb4"/>
+  <text x="490" y="300" class="label" text-anchor="middle">🌐 NAT Gateway</text>
+  <text x="490" y="315" class="detail" text-anchor="middle">x2 (HA)</text>
+
+  <!-- IGW -->
+  <rect x="630" y="280" width="160" height="50" fill="#4a90d9" class="box" stroke="#2d6cb4"/>
+  <text x="710" y="300" class="label" text-anchor="middle">🌍 Internet Gateway</text>
+
+  <!-- Bastion -->
+  <rect x="870" y="280" width="140" height="50" fill="#4a90d9" class="box" stroke="#2d6cb4"/>
+  <text x="940" y="300" class="label" text-anchor="middle">🖥️ Bastion</text>
+
+  <!-- Arrow ALB -> EKS -->
+  <path d="M240,330 L240,370" class="arrow"/>
+
+  <!-- ==================== PRIVATE APP SUBNETS ==================== -->
+  <rect x="80" y="370" width="1040" height="200" fill="#e8f5e9" class="box" stroke="#66bb6a"/>
+  <text x="100" y="390" font-size="12" font-weight="bold" fill="#2e7d32">Private Subnets — Application (10.0.10.0/24 | 10.0.11.0/24)</text>
+
+  <!-- EKS Cluster box -->
+  <rect x="110" y="405" width="620" height="150" fill="#c8e6c9" rx="10" ry="10" stroke="#43a047" stroke-dasharray="8 4"/>
+  <text x="130" y="425" font-size="13" font-weight="bold" fill="#1b5e20">☸️ EKS Cluster v1.28</text>
+
+  <!-- Node 1 -->
+  <rect x="130" y="435" width="130" height="100" fill="#81c784" class="box" stroke="#388e3c"/>
+  <text x="195" y="460" class="label" text-anchor="middle" fill="#1b5e20">Node 1</text>
+  <text x="195" y="478" class="small" text-anchor="middle">t3.medium</text>
+  <text x="195" y="492" class="small" text-anchor="middle">Django Pod</text>
+  <text x="195" y="506" class="small" text-anchor="middle">Celery Worker</text>
+  <text x="195" y="520" class="small" text-anchor="middle">Prometheus</text>
+
+  <!-- Node 2 -->
+  <rect x="280" y="435" width="130" height="100" fill="#81c784" class="box" stroke="#388e3c"/>
+  <text x="345" y="460" class="label" text-anchor="middle" fill="#1b5e20">Node 2</text>
+  <text x="345" y="478" class="small" text-anchor="middle">t3.medium</text>
+  <text x="345" y="492" class="small" text-anchor="middle">Django Pod</text>
+  <text x="345" y="506" class="small" text-anchor="middle">Celery Worker</text>
+  <text x="345" y="520" class="small" text-anchor="middle">Grafana</text>
+
+  <!-- Node 3 -->
+  <rect x="430" y="435" width="130" height="100" fill="#81c784" class="box" stroke="#388e3c"/>
+  <text x="495" y="460" class="label" text-anchor="middle" fill="#1b5e20">Node 3</text>
+  <text x="495" y="478" class="small" text-anchor="middle">t3.medium</text>
+  <text x="495" y="492" class="small" text-anchor="middle">Django Pod</text>
+  <text x="495" y="506" class="small" text-anchor="middle">Alertmanager</text>
+  <text x="495" y="520" class="small" text-anchor="middle">Redis Exporter</text>
+
+  <!-- Ingress + HPA -->
+  <rect x="590" y="435" width="120" height="50" fill="#81c784" class="box" stroke="#388e3c"/>
+  <text x="650" y="458" class="label" text-anchor="middle" fill="#1b5e20">Nginx Ingress</text>
+  <text x="650" y="473" class="small" text-anchor="middle">Controller</text>
+
+  <rect x="590" y="495" width="120" height="40" fill="#81c784" class="box" stroke="#388e3c"/>
+  <text x="650" y="515" class="label" text-anchor="middle" fill="#1b5e20">📊 HPA</text>
+  <text x="650" y="528" class="small" text-anchor="middle">3→10 pods</text>
+
+  <!-- Monitoring Stack -->
+  <rect x="780" y="405" width="310" height="150" fill="#fce4ec" rx="10" ry="10" stroke="#e57373" stroke-dasharray="8 4"/>
+  <text x="800" y="425" font-size="13" font-weight="bold" fill="#c62828">📊 Monitoring Stack</text>
+
+  <rect x="800" y="440" width="85" height="45" fill="#e53935" class="box" stroke="#b71c1c"/>
+  <text x="842" y="458" class="label" text-anchor="middle">Prometheus</text>
+  <text x="842" y="473" class="detail" text-anchor="middle">Scrape+Alert</text>
+
+  <rect x="895" y="440" width="85" height="45" fill="#e53935" class="box" stroke="#b71c1c"/>
+  <text x="937" y="458" class="label" text-anchor="middle">Grafana</text>
+  <text x="937" y="473" class="detail" text-anchor="middle">Dashboards</text>
+
+  <rect x="990" y="440" width="85" height="45" fill="#e53935" class="box" stroke="#b71c1c"/>
+  <text x="1032" y="458" class="label" text-anchor="middle">Alertmgr</text>
+  <text x="1032" y="473" class="detail" text-anchor="middle">Notifications</text>
+
+  <text x="800" y="510" class="small">Exporters: Node | Postgres | Redis | Nginx</text>
+  <text x="800" y="525" class="small">ServiceDiscovery: kubernetes_sd_configs</text>
+  <text x="800" y="540" class="small">14 alertes définies (critical + warning)</text>
+
+  <!-- ==================== PRIVATE DB SUBNETS ==================== -->
+  <rect x="80" y="590" width="1040" height="140" fill="#fff3e0" class="box" stroke="#ff9800"/>
+  <text x="100" y="610" font-size="12" font-weight="bold" fill="#e65100">Private Subnets — Database (10.0.20.0/24 | 10.0.21.0/24)</text>
+
+  <!-- RDS -->
+  <rect x="130" y="625" width="150" height="90" fill="#ffcc80" class="box" stroke="#ef6c00" rx="12"/>
+  <ellipse cx="205" cy="635" rx="70" ry="10" fill="#ffb74d" stroke="#ef6c00"/>
+  <text x="205" y="665" font-size="12" font-weight="bold" fill="#bf360c" text-anchor="middle">🗄️ RDS PostgreSQL</text>
+  <text x="205" y="682" class="small" text-anchor="middle">db.t3.micro — Port 5432</text>
+  <text x="205" y="696" class="small" text-anchor="middle">gp3 Encrypted</text>
+
+  <!-- ElastiCache -->
+  <rect x="370" y="625" width="150" height="90" fill="#ffcc80" class="box" stroke="#ef6c00" rx="12"/>
+  <ellipse cx="445" cy="635" rx="70" ry="10" fill="#ffb74d" stroke="#ef6c00"/>
+  <text x="445" y="665" font-size="12" font-weight="bold" fill="#bf360c" text-anchor="middle">⚡ ElastiCache Redis</text>
+  <text x="445" y="682" class="small" text-anchor="middle">cache.t3.micro — 6379</text>
+  <text x="445" y="696" class="small" text-anchor="middle">Sessions + Cache + PubSub</text>
+
+  <!-- S3 -->
+  <rect x="610" y="625" width="150" height="90" fill="#ffcc80" class="box" stroke="#ef6c00" rx="12"/>
+  <ellipse cx="685" cy="635" rx="70" ry="10" fill="#ffb74d" stroke="#ef6c00"/>
+  <text x="685" y="665" font-size="12" font-weight="bold" fill="#bf360c" text-anchor="middle">📦 S3 Bucket</text>
+  <text x="685" y="682" class="small" text-anchor="middle">Media Storage</text>
+  <text x="685" y="696" class="small" text-anchor="middle">Versioned + Encrypted</text>
+
+  <!-- ECR -->
+  <rect x="850" y="625" width="150" height="90" fill="#ffcc80" class="box" stroke="#ef6c00" rx="12"/>
+  <ellipse cx="925" cy="635" rx="70" ry="10" fill="#ffb74d" stroke="#ef6c00"/>
+  <text x="925" y="665" font-size="12" font-weight="bold" fill="#bf360c" text-anchor="middle">🐳 ECR</text>
+  <text x="925" y="682" class="small" text-anchor="middle">Docker Images</text>
+  <text x="925" y="696" class="small" text-anchor="middle">Private Registry</text>
+
+  <!-- Arrows EKS -> Data layer -->
+  <path d="M195,535 L195,590 L205,625" class="arrow" stroke="#ef6c00"/>
+  <path d="M345,535 L345,590 L445,625" class="arrow" stroke="#ef6c00"/>
+  <path d="M495,535 L495,590 L685,625" class="arrow" stroke="#ef6c00"/>
+
+  <!-- ==================== CI/CD + Terraform ==================== -->
+  <rect x="80" y="760" width="480" height="55" fill="#e3f2fd" class="box" stroke="#42a5f5"/>
+  <text x="100" y="782" font-size="12" font-weight="bold" fill="#1565c0">🔄 CI/CD: GitHub Actions</text>
+  <text x="100" y="798" class="small">Test → Build → Trivy Scan → Push ECR → kubectl deploy EKS</text>
+
+  <rect x="600" y="760" width="480" height="55" fill="#e3f2fd" class="box" stroke="#42a5f5"/>
+  <text x="620" y="782" font-size="12" font-weight="bold" fill="#1565c0">🏗️ IaC: Terraform</text>
+  <text x="620" y="798" class="small">S3 Backend + DynamoDB Lock | VPC, EKS, RDS, ElastiCache, ALB, S3</text>
+
+  <!-- Arrow CI/CD -> ECR -->
+  <path d="M320,760 L320,740 L925,715 L925,715" class="arrow dashed" stroke="#42a5f5"/>
+
+  <!-- ==================== SECURITY ==================== -->
+  <rect x="80" y="835" width="1040" height="50" fill="#f3e5f5" class="box" stroke="#9c27b0"/>
+  <text x="100" y="858" font-size="12" font-weight="bold" fill="#6a1b9a">🔒 Sécurité</text>
+  <text x="100" y="873" class="small">SG: ALB(0.0.0.0/0:80,443) → EKS(ALB only) → RDS(EKS only) → Redis(EKS only) | .env gitignoré | Trivy scan | Bandit | KMS encryption | Non-root containers</text>
+
+  <!-- Legend -->
+  <rect x="950" y="70" width="200" height="120" fill="#fff" class="box" stroke="#ccc"/>
+  <text x="960" y="88" font-size="11" font-weight="bold">Légende</text>
+  <rect x="960" y="95" width="15" height="12" fill="#4a90d9"/><text x="980" y="105" class="small">Public / Network</text>
+  <rect x="960" y="112" width="15" height="12" fill="#81c784"/><text x="980" y="122" class="small">EKS / Compute</text>
+  <rect x="960" y="129" width="15" height="12" fill="#e53935"/><text x="980" y="139" class="small">Monitoring</text>
+  <rect x="960" y="146" width="15" height="12" fill="#ffcc80"/><text x="980" y="156" class="small">Data / Storage</text>
+  <rect x="960" y="163" width="15" height="12" fill="#f3e5f5"/><text x="980" y="173" class="small">Security</text>
+</svg>
