@@ -26,12 +26,29 @@
 
 ---
 
+## ✅ TRAITE CONTINUATION
+
+### 5. Services connectes au monitoring - TERMINE
+- [x] Lancer postgres-exporter (port 9187) - **UP**
+- [x] Lancer redis-exporter (port 9121) - **UP**
+- [x] Tous les exporters sont fonctionnels (node, postgres, redis)
+
+### 6. Git cleanup - TERMINE
+- [x] Supprimer branches obsolètes : feature/images, hotfix/pharmacy-images, staging, master
+- [x] Standardiser sur : main + develop uniquement
+
+### 7. Alertes configurees - TERMINE
+- [x] Ajouter alerte test `TestAlertAlwaysFiring` pour demo
+- [x] Corriger connexion Prometheus → Alertmanager (host.docker.internal)
+- [x] Configurer webhook de test (httpbin.org)
+
 ## 🔴 RESTE A FAIRE (Bloquant pour le jury)
 
-### Priorite 1 - Connecter services au monitoring
-- [ ] Lancer exporters : postgres-exporter (port 9187), redis-exporter (port 9121)
-- [ ] Verifier dans Prometheus Targets que tous sont "UP"
-- [ ] Lancer l'application Django pour metrics applicatives
+### Priorite 1 - Tester les alertes de bout en bout
+- [ ] **Test manuel obligatoire** : Lancer stress-ng pour saturer CPU
+- [ ] Verifier que l'alerte "HighCPUUsage" se déclenche dans Prometheus
+- [ ] Verifier que l'alerte arrive dans Alertmanager (http://localhost:9093)
+- [ ] Verifier que le webhook reçoit la notification
 
 ### Priorite 2 - Tester les alertes
 - [ ] Verifier regles d'alerte dans `monitoring/prometheus/rules/`
@@ -56,15 +73,47 @@
 | Prometheus | http://localhost:9090 | ✅ UP |
 | Alertmanager | http://localhost:9093 | ✅ UP |
 | Node Exporter | http://localhost:9100/metrics | ✅ UP |
-| PostgreSQL | localhost:5432 | ✅ UP (pas d'exporter) |
-| Redis | localhost:6379 | ✅ UP (pas d'exporter) |
+| PostgreSQL Exporter | http://localhost:9187/metrics | ✅ UP |
+| Redis Exporter | http://localhost:9121/metrics | ✅ UP |
+| PostgreSQL | localhost:5432 | ✅ UP |
+| Redis | localhost:6379 | ✅ UP |
 
 ---
 
-## 🎯 Prochaine session : Tester les alertes
+## 🎯 TEST CRITIQUE A FAIRE IMMEDIATEMENT
 
-1. Aller sur Prometheus > Alerts
-2. Verifier que les regles sont chargees
-3. Lancer stress-ng pour creer une charge CPU
-4. Observer le declenchement de l'alerte "HighCPUUsage"
-5. Verifier dans Alertmanager que l'alerte est recue
+**Max a insisté : "Une alerte définie sans test = aucune valeur au jury"**
+
+### Procedure de test d'alerte CPU :
+
+1. **Installer stress-ng** (si pas déjà fait) :
+   ```bash
+   # Linux/WSL
+   sudo apt-get install stress-ng
+   
+   # Ou utiliser Docker
+   docker run --rm -it polinux/stress-ng:latest --cpu 4 --timeout 60s
+   ```
+
+2. **Lancer le test** (dans un terminal séparé) :
+   ```bash
+   stress-ng --cpu 4 --timeout 120s
+   ```
+
+3. **Observer dans Prometheus** (http://localhost:9090) :
+   - Menu : Alerts
+   - L'alerte "HighCPUUsage" doit passer de "Pending" à "Firing"
+
+4. **Verifier dans Alertmanager** (http://localhost:9093) :
+   - L'alerte doit apparaître dans la liste
+   - Le statut doit être "active"
+
+5. **Capturer des screenshots** pour le jury :
+   - Prometheus Alerts en état "Firing"
+   - Alertmanager avec l'alerte reçue
+
+## 🔴 PRIORITE 2 - Securite EKS (avant jury)
+
+### Restreindre EKS public access
+- [ ] Modifier `terraform/eks.tf` : `public_access_cidrs = ["YOUR_IP/32"]`
+- [ ] Auditer `.env.example` : confirmer que Stripe/SMS/Google Maps keys sont externalisées
