@@ -98,8 +98,9 @@ docker-compose logs -f app
 
 # Accéder à :
 # - Application : http://localhost
-# - Grafana     : http://localhost:3000 (admin/admin)
-# - Prometheus  : http://localhost:9090 (dans le réseau Docker)
+# - Grafana     : http://127.0.0.1:3001 (admin/admin123)
+# - Prometheus  : http://localhost:9090
+# - Alertmanager: http://localhost:9093
 
 # 4. Arrêter les services
 docker-compose down
@@ -147,8 +148,9 @@ kubectl apply -k k8s/overlays/production/
 ### Monitoring
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Grafana | http://localhost:3000 | admin/admin |
+| Grafana | http://127.0.0.1:3001 | admin/admin123 |
 | Prometheus | http://localhost:9090 | (aucun) |
+| Alertmanager | http://localhost:9093 | (aucun) |
 
 ## 🔧 Configuration
 
@@ -357,47 +359,43 @@ kubectl get pods -n multiserve -w
 
 ## 📊 Monitoring Local
 
-Prometheus et Grafana sont préconfigurés pour le monitoring local :
+La stack de monitoring complète est fonctionnelle avec les composants suivants :
+
+### Services de monitoring
+
+| Service | URL | Credentials | Description |
+|---------|-----|-------------|-------------|
+| **Grafana** | http://127.0.0.1:3001 | admin / admin123 | Dashboards et visualisation |
+| **Prometheus** | http://localhost:9090 | (aucune) | Collecte métriques et alertes |
+| **Alertmanager** | http://localhost:9093 | (aucune) | Routage des alertes |
+| **Node Exporter** | http://localhost:9100/metrics | (aucune) | Métriques système (CPU, RAM, disque) |
+
+> **Note :** Sur Windows avec Docker Desktop, utiliser `127.0.0.1` pour Grafana au lieu de `localhost`.
+
+### Démarrage rapide
 
 ```bash
-# Lancer Prometheus et Grafana
-docker-compose up -d prometheus grafana
+# Lancer toute la stack de monitoring
+docker-compose up -d prometheus grafana alertmanager node-exporter
 
-# Accès :
-# - Prometheus : http://localhost:9090
-# - Grafana   : http://localhost:3001 (admin/admin)
+# Ou démarrage manuel individuel :
+docker run -d --name multiserve_prometheus --network multiserve_backend -p 9090:9090 prom/prometheus:v2.47.0
+docker run -d --name multiserve_grafana --network multiserve_backend -p 3001:3000 -e GF_SECURITY_ADMIN_USER=admin -e GF_SECURITY_ADMIN_PASSWORD=admin123 grafana/grafana:10.1.0
+docker run -d --name multiserve_alertmanager --network multiserve_backend -p 9093:9093 prom/alertmanager:v0.26.0
+docker run -d --name multiserve_node_exporter --network multiserve_backend -p 9100:9100 prom/node-exporter:v1.6.1
 ```
 
 ### Métriques disponibles
 
-- **Django** : Requêtes HTTP, temps de réponse, erreurs
-- **PostgreSQL** : Connexions, requêtes, performance
-- **Redis** : Opérations, mémoire, hit rate
-- **Kubernetes** : Pods, CPU, mémoire, réseau
+- **Node Exporter** : CPU, Mémoire, Disque, Réseau (système)
+- **Django** : Requêtes HTTP, temps de réponse, erreurs (quand app lancée)
+- **PostgreSQL** : Connexions, requêtes, performance (quand DB lancée)
+- **Redis** : Opérations, mémoire, hit rate (quand Redis lancé)
+- **Kubernetes** : Pods, CPU, mémoire, réseau (en production sur EKS)
 
 ---
 
-## 🔒 Sécurité
-
-### Network Policies
-- Default deny : Tout le trafic ingress bloqué par défaut
-- Allow ingress : Uniquement depuis Ingress Controller
-- Allow egress : Ports 443, 80, 5432, 6379
-
-### Container Security
-- Non-root user : runAsNonRoot: true
-- Read-only filesystem : readOnlyRootFilesystem: true
-- Capabilities dropped : ALL capabilities supprimées
-- No privilege escalation : allowPrivilegeEscalation: false
-
-### Secrets Management
-- Kubernetes Secrets : Stockage chiffré
-- Base64 encoding : Encodage des valeurs sensibles
-- IRSA : IAM Roles for Service Accounts (AWS)
-
----
-
-## 📈 Scalabilité
+## � Scalabilité
 
 ### Horizontal Pod Autoscaler (HPA)
 - **Min replicas :** 3
