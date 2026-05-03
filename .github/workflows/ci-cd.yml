@@ -59,12 +59,10 @@ jobs:
           pip install pytest pytest-django pytest-cov black flake8 bandit safety 2>&1 || true
 
       - name: Lint with flake8
-        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-        continue-on-error: true
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Format check with black
-        run: black --check . || true
-        continue-on-error: true
+        run: black --check .
 
       - name: Security scan with Bandit
         run: bandit -r . -f json -o bandit-report.json || true
@@ -187,7 +185,7 @@ jobs:
   deploy:
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/principal'
     environment: production
 
     steps:
