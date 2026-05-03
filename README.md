@@ -441,9 +441,9 @@ La pipeline GitHub Actions comprend 4 stages :
 
 ## 📞 Auteur
 
-**Abid RAKHIS AHMAT**  
+**ABID RAKHIS AHMAT**  
 Projet Multi-Service DevOps - Application Django Multi-Services  
-Date : 23 Avril 2026
+Session : Juin - Juillet 2026
 
 ---
 
