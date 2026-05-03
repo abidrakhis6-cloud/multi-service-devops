@@ -11,7 +11,7 @@ Plateforme complète de services à domicile (Delivery as a Service) avec infras
 - ✅ **Boutiques** : Apple, Dior, Chanel, Louis Vuitton
 - ✅ **Pharmacie** : Médicaments et produits de beauté 24/7
 - ✅ **Panier** : Calcul automatique, ajout/suppression produits
-- ✅ **Paiement** : 6 méthodes (CB, Visa, PayPal, Apple Pay, Google Pay, Espèces)
+- ✅ **Paiement** : 6 méthodes (CB, Visa, PayPal, Apple Pay, Google Pay, Espèces) via **Stripe ou SumUp**
 - ✅ **Livraison** : Suivi GPS, Chat temps réel avec livreur, Appel/SMS
 
 ### Infrastructure & DevOps
