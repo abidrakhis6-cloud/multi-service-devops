@@ -84,7 +84,7 @@ variable "node_capacity_type" {
 variable "allowed_public_cidrs" {
   description = "Allowed CIDRs for public access"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["13.49.183.244/32"]  # IP fixe de l'instance glo-service
 }
 
 # RDS Variables
