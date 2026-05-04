@@ -135,6 +135,23 @@ services:
       retries: 3
 
   # ==========================================
+  # Nginx Exporter
+  # ==========================================
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:0.11.0
+    container_name: multiserve_nginx_exporter
+    restart: unless-stopped
+    command:
+      - -nginx.scrape-uri=http://nginx:80/metrics
+    ports:
+      - "9113:9113"
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - nginx
+
+  # ==========================================
   # Prometheus - Monitoring
   # ==========================================
   prometheus:
