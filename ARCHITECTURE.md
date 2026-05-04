@@ -37,7 +37,7 @@ Session : Juin - Juillet 2026
 │  ┌─────────────────────────────────┼─────────────────────────────────┐        │
 │  │              API Gateway (Django REST + DRF)                    │        │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐             │        │
-│  │  │  Auth    │ │  Orders  │ │  Stores  │ │  Payment │             │        │
+│  │  │  Auth    │ │  Paiement | 6 méthodes (CB, Visa, PayPal, Apple Pay, Google Pay, Espèces) - **Via Stripe ou SumUp**         │        │
 │  │  │ Service  │ │ Service  │ │ Service  │ │ Service  │             │        │
 │  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘             │        │
 │  └─────────────────────────────────┼─────────────────────────────────┘        │

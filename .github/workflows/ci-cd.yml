@@ -60,17 +60,21 @@ jobs:
 
       - name: Lint with flake8
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # CI fails on lint errors to enforce code quality standards
 
       - name: Format check with black
         run: black --check .
+        # CI fails on format errors to enforce code quality standards
 
       - name: Security scan with Bandit
         run: bandit -r . -f json -o bandit-report.json || true
         continue-on-error: true
+        # Security scan may have false positives; logs generated for review
 
       - name: Dependency vulnerability check
         run: safety check || true
         continue-on-error: true
+        # Dependency check may flag outdated packages; review bandit-report.json
 
       - name: Run tests with pytest
         env:
@@ -185,7 +189,7 @@ jobs:
   deploy:
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/principal'
+    if: github.ref == 'refs/heads/main'
     environment: production
 
     steps:
