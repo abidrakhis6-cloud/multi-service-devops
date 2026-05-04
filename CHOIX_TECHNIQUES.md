@@ -1,5 +1,13 @@
 # MultiServe - Justification des Choix Techniques
 
+## 👤 Auteur
+
+**ABID RAKHIS AHMAT**  
+Projet Multi-Service DevOps - Application Django Multi-Services  
+Session : Juin - Juillet 2026
+
+---
+
 ## 1. Orchestration : Pourquoi EKS et non ECS ?
 
 EKS (Kubernetes) a été retenu pour trois raisons : **portabilité** — les manifests Kubernetes et le workflow CI/CD sont réutilisables sur GKE, AKS ou tout cluster k8s sans réécriture ; **écosystème** — Helm, Kustomize, HPA et les ServiceMonitors offrent un contrôle granulaire du déploiement, du scaling et du monitoring que ECS ne propose pas nativement ; **compétences** — Kubernetes est le standard industrie (CNCF) et démontre une maîtrise plus large de l'orchestration conteneurisée, ce qui est attendu dans une certification DevOps.

@@ -1,5 +1,15 @@
 # Architecture MultiServe
 
+## 👤 Auteur
+
+**ABID RAKHIS AHMAT**  
+Projet Multi-Service DevOps - Application Django Multi-Services  
+Session : Juin - Juillet 2026
+
+---
+
+*Architecture Technique MultiServe - Version 1.0*
+
 ## Schéma d'Architecture
 
 ```

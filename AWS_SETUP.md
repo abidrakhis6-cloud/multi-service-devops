@@ -1,10 +1,17 @@
 # AWS Setup Guide - MultiServe
 
-## 🔑 Identifiants AWS
+## � Auteur
+
+**ABID RAKHIS AHMAT**  
+Projet Multi-Service DevOps - Application Django Multi-Services  
+Session : Juin - Juillet 2026
+
+---
+
+## �🔑 Identifiants AWS
 
 ### Access Keys (IAM User: Aboudi)
 ⚠️ **NE PAS COMMITTER LES VRAIES CLÉS** - Utilise GitHub Secrets
-```
 AWS_ACCESS_KEY_ID=your-access-key-id
 AWS_SECRET_ACCESS_KEY=your-secret-access-key
 AWS_REGION=eu-west-3

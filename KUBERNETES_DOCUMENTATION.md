@@ -1,4 +1,12 @@
-# Documentation Kubernetes - MultiServe
+# 📚 Documentation Kubernetes - MultiServe
+
+## 👤 Auteur
+
+**ABID RAKHIS AHMAT**  
+Projet Multi-Service DevOps - Application Django Multi-Services  
+Session : Juin - Juillet 2026
+
+---
 
 **Auteur :** Abid RAKHIS AHMAT  
 **Date :** 23 Avril 2026  

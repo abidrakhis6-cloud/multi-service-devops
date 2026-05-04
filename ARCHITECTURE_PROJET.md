@@ -3,8 +3,8 @@
 # Cahier des Charges & Schémas
 # ==========================================
 
-**Auteur :** Abid RAKHIS AHMAT  
-**Date :** 24 Avril 2026  
+**Auteur :** ABID RAKHIS AHMAT  
+**Session :** Juin - Juillet 2026  
 **Version :** 1.0
 
 ---

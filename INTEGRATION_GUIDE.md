@@ -1,5 +1,13 @@
 # 🔧 Guide d'Intégration - Glo-Service
 
+## 👤 Auteur
+
+**ABID RAKHIS AHMAT**  
+Projet Multi-Service DevOps - Application Django Multi-Services  
+Session : Juin - Juillet 2026
+
+---
+
 ## 1️⃣ Intégration Stripe (Paiement par Carte)
 
 ### Étape 1 : Créer un compte Stripe
