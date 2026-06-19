@@ -98,7 +98,7 @@ docker-compose logs -f app
 
 # Accéder à :
 # - Application : http://localhost
-# - Grafana     : http://127.0.0.1:3001 (admin/admin123)
+# - Grafana     : http://127.0.0.1:3001 (admin/CHANGE_ME_STRONG_PASSWORD)
 # - Prometheus  : http://localhost:9090
 # - Alertmanager: http://localhost:9093
 
@@ -148,7 +148,7 @@ kubectl apply -k k8s/overlays/production/
 ### Monitoring
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Grafana | http://127.0.0.1:3001 | admin/admin123 |
+| Grafana | http://127.0.0.1:3001 | admin/CHANGE_ME_STRONG_PASSWORD |
 | Prometheus | http://localhost:9090 | (aucun) |
 | Alertmanager | http://localhost:9093 | (aucun) |
 
@@ -365,7 +365,7 @@ La stack de monitoring complète est fonctionnelle avec les composants suivants 
 
 | Service | URL | Credentials | Description |
 |---------|-----|-------------|-------------|
-| **Grafana** | http://127.0.0.1:3001 | admin / admin123 | Dashboards et visualisation |
+| **Grafana** | http://127.0.0.1:3001 | admin / CHANGE_ME_STRONG_PASSWORD | Dashboards et visualisation |
 | **Prometheus** | http://localhost:9090 | (aucune) | Collecte métriques et alertes |
 | **Alertmanager** | http://localhost:9093 | (aucune) | Routage des alertes |
 | **Node Exporter** | http://localhost:9100/metrics | (aucune) | Métriques système (CPU, RAM, disque) |
@@ -380,7 +380,7 @@ docker-compose up -d prometheus grafana alertmanager node-exporter
 
 # Ou démarrage manuel individuel :
 docker run -d --name multiserve_prometheus --network multiserve_backend -p 9090:9090 prom/prometheus:v2.47.0
-docker run -d --name multiserve_grafana --network multiserve_backend -p 3001:3000 -e GF_SECURITY_ADMIN_USER=admin -e GF_SECURITY_ADMIN_PASSWORD=admin123 grafana/grafana:10.1.0
+docker run -d --name multiserve_grafana --network multiserve_backend -p 3001:3000 -e GF_SECURITY_ADMIN_USER=admin -e GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_STRONG_PASSWORD grafana/grafana:10.1.0
 docker run -d --name multiserve_alertmanager --network multiserve_backend -p 9093:9093 prom/alertmanager:v0.26.0
 docker run -d --name multiserve_node_exporter --network multiserve_backend -p 9100:9100 prom/node-exporter:v1.6.1
 ```

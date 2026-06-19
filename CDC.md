@@ -784,7 +784,7 @@ spec:
 
 | Service | URL | Credentials | Statut |
 |---------|-----|-------------|--------|
-| **Grafana** | http://127.0.0.1:3001 | admin / admin123 | ✅ Fonctionnel |
+| **Grafana** | http://127.0.0.1:3001 | admin / CHANGE_ME_STRONG_PASSWORD | ✅ Fonctionnel |
 | **Prometheus** | http://localhost:9090 | (aucune) | ✅ Fonctionnel |
 | **Alertmanager** | http://localhost:9093 | (aucune) | ✅ Fonctionnel |
 | **Node Exporter** | http://localhost:9100/metrics | (aucune) | ✅ Fonctionnel |

@@ -509,7 +509,7 @@ dig +trace multi-serve.fr
 ## 📞 Support
 
 **Documentation API :** `API_AUTH_DOCUMENTATION.md`
-**Monitoring :** https://multi-serve.fr:3001 (admin/admin123)
+**Monitoring :** https://multi-serve.fr:3001 (admin/CHANGE_ME_STRONG_PASSWORD)
 **Logs :** `docker-compose logs -f`
 
 ---

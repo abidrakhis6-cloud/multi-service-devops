@@ -32,9 +32,9 @@ user, created = User.objects.get_or_create(
 )
 
 if created:
-    user.set_password('admin123')
+    user.set_password('CHANGE_ME_STRONG_PASSWORD')
     user.save()
-    print(f"✅ Utilisateur '{username}' créé avec mot de passe 'admin123'")
+    print(f"✅ Utilisateur '{username}' créé avec mot de passe 'CHANGE_ME_STRONG_PASSWORD'")
 else:
     print(f"✅ Utilisateur '{username}' trouvé")
 
