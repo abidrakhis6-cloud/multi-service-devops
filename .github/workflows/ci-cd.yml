@@ -227,6 +227,7 @@ jobs:
               gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
               echo '>>> Mise à jour du code...'
+              git config --global --add safe.directory /opt/multiserve
               cd /opt/multiserve
               git pull origin main
 
