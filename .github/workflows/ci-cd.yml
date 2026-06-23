@@ -11,9 +11,6 @@ env:
   GCP_REGION: europe-west1
 
 jobs:
-  # ============================================================
-  # STAGE 1 — TESTS + LINT
-  # ============================================================
   test:
     name: Tests & Qualité
     runs-on: ubuntu-latest
@@ -107,9 +104,6 @@ jobs:
             bandit-report.json
             coverage.xml
 
-  # ============================================================
-  # STAGE 2 — BUILD + PUSH + SCAN TRIVY
-  # ============================================================
   build:
     name: Build & Scan Sécurité
     needs: test
@@ -191,9 +185,6 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '0'
 
-  # ============================================================
-  # STAGE 3 — DÉPLOIEMENT GCP (VM GCE + Docker Compose)
-  # ============================================================
   deploy:
     name: Déploiement GCP
     needs: [test, build]
@@ -212,22 +203,18 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Déploiement via SSH sur l'instance GCE
+      - name: Déploiement via metadata sur l'instance GCE
         run: |
           IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app:${{ needs.build.outputs.image_tag }}"
+          ACCESS_TOKEN="$(gcloud auth print-access-token)"
 
-          cat > deploy.sh <<'EOF'
+          cat > /tmp/startup-deploy.sh <<'EOF'
+          #!/bin/bash
           set -e
 
-          echo '>>> Authentification Artifact Registry...'
-          gcloud auth configure-docker REPLACE_GCP_REGION-docker.pkg.dev --quiet
-
           TARGET_DIR=/opt/multiserve
-          echo '>>> Vérification du dépôt dans' "$TARGET_DIR"
+          mkdir -p /opt
           if [ ! -d "$TARGET_DIR/.git" ]; then
-            echo '>>> Dépôt absent ou non cloné. Clonage...'
-            sudo mkdir -p /opt
-            sudo chown "$(whoami):$(whoami)" /opt
             git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git "$TARGET_DIR"
           fi
 
@@ -237,11 +224,12 @@ jobs:
           git reset --hard origin/main
           git clean -fd
 
-          echo '>>> Mise à jour du tag image...'
+          echo "__ACCESS_TOKEN__" | docker login -u oauth2accesstoken --password-stdin "https://${{ env.GCP_REGION }}-docker.pkg.dev"
+
           if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
-            sed -i 's|^APP_IMAGE=.*|APP_IMAGE=REPLACE_IMAGE_REF|' .env
+            sed -i 's|^APP_IMAGE=.*|APP_IMAGE=IMAGE_REF|' .env
           else
-            echo 'APP_IMAGE=REPLACE_IMAGE_REF' >> .env
+            echo "APP_IMAGE=IMAGE_REF" >> .env
           fi
 
           if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
@@ -249,32 +237,31 @@ jobs:
           elif command -v docker-compose >/dev/null 2>&1; then
             COMPOSE_CMD='docker-compose'
           else
-            echo 'Docker Compose introuvable'
+            echo 'Docker Compose introuvable' >&2
             exit 1
           fi
 
           echo '>>> Pull de la nouvelle image...'
-          eval "$COMPOSE_CMD pull app"
+          $COMPOSE_CMD pull app
 
           echo '>>> Redémarrage des services...'
-          eval "$COMPOSE_CMD up -d --no-build"
+          $COMPOSE_CMD up -d --no-build
 
           echo '>>> État des conteneurs...'
-          eval "$COMPOSE_CMD ps"
+          $COMPOSE_CMD ps
 
           echo '>>> Nettoyage des anciennes images...'
           docker image prune -f
           EOF
 
-          sed -i "s|REPLACE_IMAGE_REF|${IMAGE_REF}|g" deploy.sh
-          sed -i "s|REPLACE_GCP_REGION|${{ env.GCP_REGION }}|g" deploy.sh
-          chmod +x deploy.sh
-
-          gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
+          sed -i "s|IMAGE_REF|${IMAGE_REF}|g" /tmp/startup-deploy.sh
+          sed -i "s|__ACCESS_TOKEN__|${ACCESS_TOKEN}|g" /tmp/startup-deploy.sh
+          gcloud compute instances add-metadata ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
-            --quiet \
-            --command="bash -s" < deploy.sh
+            --metadata-from-file startup-script=/tmp/startup-deploy.sh
+          gcloud compute instances reset ${{ secrets.GCE_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCE_ZONE }} --quiet
 
       - name: Smoke test — vérification santé
         run: |
