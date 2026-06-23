@@ -14,7 +14,7 @@ global:
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: ['host.docker.internal:9093']
+        - targets: ['alertmanager:9093']
 
 # Load rules
 rule_files:

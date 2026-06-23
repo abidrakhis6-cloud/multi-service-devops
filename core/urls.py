@@ -16,6 +16,7 @@ urlpatterns = [
     path('cart/', views.cart_view, name='cart'),
     path('checkout/', views.checkout_view, name='checkout'),
     path('login/', views.user_login, name='login'),
+    path('demo-login/', views.demo_login, name='demo_login'),
     path('logout/', views.user_logout, name='logout'),
     path('register/', views.register, name='register'),
     path('register-user/', views.user_registration, name='user_registration'),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('api/send-sms/', views.send_sms_api, name='send_sms'),
     path('api/send-verification-sms/', views.send_verification_sms, name='send_verification_sms'),
     path('api/make-call/', views.make_call_api, name='make_call'),
+    path('api/save-order/', views.save_order_api, name='save_order'),
     path('api/health/', views.health_check, name='health'),
     # Stripe Payment endpoints
     path('api/payment/create-intent/', stripe_views.create_payment_intent, name='create_payment_intent'),

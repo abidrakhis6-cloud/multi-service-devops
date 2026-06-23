@@ -219,6 +219,7 @@
     font-size: 13px;
     margin-top: 8px;
 }
+
 </style>
 
 <div class="auth-container">
@@ -228,6 +229,14 @@
             <h1>Connexion</h1>
             <p>Connectez-vous pour accéder à votre compte</p>
         </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div style="background:rgba(239,68,68,.15);border:1px solid #ef4444;border-radius:12px;padding:14px;margin-bottom:20px;color:#f87171;font-size:14px;">
+            ⚠ {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
 
         <form method="post" action="/login/" id="login-form">
             {% csrf_token %}
@@ -305,6 +314,7 @@
             <p>Pas encore de compte ?</p>
             <a href="/register/">Créer un compte gratuitement</a>
         </div>
+
     </div>
 </div>
 

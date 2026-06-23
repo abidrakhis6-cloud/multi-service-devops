@@ -1,0 +1,129 @@
+# ============================================================
+# MultiServe - Docker Compose pour VM e2-micro (1GB RAM)
+# Optimisé pour hébergement gratuit GCP
+# Pas de monitoring stack (trop lourd pour 1GB)
+# ============================================================
+
+version: '3.8'
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: multiserve_app
+    restart: unless-stopped
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_ENGINE=postgresql
+      - DB_NAME=${DB_NAME:-multiserve}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - MEDIA_URL=/media/
+      - STATIC_URL=/static/
+      - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-False}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 300m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: postgres:15-alpine
+    container_name: multiserve_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-multiserve}
+      - POSTGRES_USER=${DB_USER:-admin}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    mem_limit: 200m
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c max_connections=50
+      -c work_mem=2MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-multiserve}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: multiserve_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --appendonly no
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    mem_limit: 150m
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: multiserve_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl
+      - static_volume:/var/www/static:ro
+      - media_volume:/var/www/media:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - frontend
+      - backend
+    mem_limit: 50m
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true

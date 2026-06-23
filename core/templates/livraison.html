@@ -11,9 +11,7 @@
 }
 
 @media (max-width: 900px) {
-    .delivery-container {
-        grid-template-columns: 1fr;
-    }
+    .delivery-container { grid-template-columns: 1fr; }
 }
 
 .map-container {
@@ -36,22 +34,16 @@
     bottom: 20px;
     left: 20px;
     right: 20px;
-    background: rgba(15, 23, 42, 0.9);
-    padding: 15px;
+    background: rgba(15, 23, 42, 0.92);
+    padding: 14px 18px;
     border-radius: 12px;
     backdrop-filter: blur(10px);
+    z-index: 1000;
+    pointer-events: none;
 }
 
-.map-overlay p {
-    color: #94a3b8;
-    font-size: 14px;
-}
-
-.map-overlay .distance {
-    color: #10b981;
-    font-weight: 600;
-    font-size: 18px;
-}
+.map-overlay p { color: #94a3b8; font-size: 14px; }
+.map-overlay .distance { color: #10b981; font-weight: 600; font-size: 17px; margin-top: 6px; }
 
 .driver-info {
     background: var(--card);
@@ -81,6 +73,7 @@
     font-size: 36px;
     color: white;
     position: relative;
+    flex-shrink: 0;
 }
 
 .driver-avatar::after {
@@ -95,24 +88,11 @@
     border: 2px solid white;
 }
 
-.driver-details h3 {
-    font-size: 24px;
-    margin-bottom: 5px;
-}
+.driver-details h3 { font-size: 22px; margin-bottom: 5px; }
+.driver-details p { color: #94a3b8; font-size: 14px; }
+.rating { color: #f59e0b; margin-top: 5px; }
 
-.driver-details p {
-    color: #94a3b8;
-    font-size: 14px;
-}
-
-.rating {
-    color: #f59e0b;
-    margin-top: 5px;
-}
-
-.status-timeline {
-    margin: 25px 0;
-}
+.status-timeline { margin: 25px 0; }
 
 .timeline-item {
     display: flex;
@@ -134,33 +114,12 @@
     background: var(--border);
 }
 
-.timeline-item.active::before {
-    background: #10b981;
-    box-shadow: 0 0 15px #10b981;
-}
-
-.timeline-item.active {
-    border-left-color: #10b981;
-}
-
-.timeline-item i {
-    font-size: 24px;
-    color: #94a3b8;
-}
-
-.timeline-item.active i {
-    color: #10b981;
-}
-
-.timeline-content h4 {
-    font-size: 16px;
-    margin-bottom: 3px;
-}
-
-.timeline-content p {
-    font-size: 13px;
-    color: #94a3b8;
-}
+.timeline-item.active::before { background: #10b981; box-shadow: 0 0 15px #10b981; }
+.timeline-item.active { border-left-color: #10b981; }
+.timeline-item i { font-size: 22px; color: #94a3b8; }
+.timeline-item.active i { color: #10b981; }
+.timeline-content h4 { font-size: 15px; margin-bottom: 3px; }
+.timeline-content p { font-size: 12px; color: #94a3b8; }
 
 .communication-btns {
     display: grid;
@@ -183,24 +142,13 @@
     font-weight: 600;
     transition: all 0.3s ease;
     text-decoration: none;
+    font-size: 13px;
 }
 
-.comm-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-}
-
-.comm-btn.voice {
-    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-}
-
-.comm-btn.voice:hover {
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-}
-
-.comm-btn i {
-    font-size: 24px;
-}
+.comm-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4); }
+.comm-btn.voice { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); }
+.comm-btn.voice:hover { box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); }
+.comm-btn i { font-size: 22px; }
 
 .chat-section {
     background: var(--card);
@@ -220,18 +168,17 @@
     margin-bottom: 20px;
 }
 
-.chat-header i {
-    font-size: 28px;
-    color: #3b82f6;
-}
+.chat-header i { font-size: 28px; color: #3b82f6; }
+
 
 .chat-messages {
-    height: 250px;
+    height: 280px;
     overflow-y: auto;
     padding: 15px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 12px;
     margin-bottom: 15px;
+    scroll-behavior: smooth;
 }
 
 .message {
@@ -239,22 +186,45 @@
     border-radius: 12px;
     margin-bottom: 10px;
     max-width: 70%;
+    word-break: break-word;
+    animation: fadeIn 0.3s ease;
 }
 
-.message.driver {
-    background: rgba(59, 130, 246, 0.2);
-    margin-right: auto;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.message.customer {
-    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-    margin-left: auto;
-}
+.message.driver { background: rgba(59, 130, 246, 0.2); margin-right: auto; }
+.message.customer { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); margin-left: auto; }
 
-.chat-input {
+.typing-indicator {
     display: flex;
-    gap: 10px;
+    gap: 5px;
+    padding: 12px 16px;
+    background: rgba(59, 130, 246, 0.15);
+    border-radius: 12px;
+    max-width: 70px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
 }
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    animation: bounce 1.2s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+}
+
+.chat-input { display: flex; gap: 10px; }
 
 .chat-input input {
     flex: 1;
@@ -264,7 +234,10 @@
     background: rgba(0, 0, 0, 0.2);
     color: var(--text);
     font-size: 15px;
+    transition: border-color 0.2s;
 }
+
+.chat-input input:focus { outline: none; border-color: #3b82f6; }
 
 .chat-input button {
     padding: 12px 25px;
@@ -274,7 +247,10 @@
     border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
+    transition: opacity 0.2s;
 }
+
+.chat-input button:hover { opacity: 0.9; }
 
 .estimated-time {
     background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
@@ -285,23 +261,14 @@
     margin-bottom: 25px;
 }
 
-.estimated-time h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
-}
+.estimated-time h3 { font-size: 18px; margin-bottom: 10px; }
+.estimated-time .time { font-size: 36px; font-weight: 700; }
 
-.estimated-time .time {
-    font-size: 36px;
-    font-weight: 700;
-}
-
-.sms-modal, .call-modal {
+.sms-modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.7);
     z-index: 2000;
     justify-content: center;
@@ -317,12 +284,9 @@
     border: 1px solid var(--border);
 }
 
-.modal-content h3 {
-    margin-bottom: 20px;
-    text-align: center;
-}
+.modal-content h3 { margin-bottom: 20px; text-align: center; }
 
-.modal-content input, .modal-content textarea {
+.modal-content textarea {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border);
@@ -331,44 +295,20 @@
     color: var(--text);
     margin-bottom: 15px;
     font-family: inherit;
-}
-
-.modal-content textarea {
     min-height: 100px;
     resize: vertical;
 }
 
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.modal-buttons button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.modal-buttons .btn-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    color: white;
-}
-
-.modal-buttons .btn-secondary {
-    background: var(--border);
-    color: var(--text);
-}
+.modal-buttons { display: flex; gap: 10px; }
+.modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+.modal-buttons .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; }
+.modal-buttons .btn-secondary { background: var(--border); color: var(--text); }
 
 .call-interface {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
     z-index: 3000;
     flex-direction: column;
@@ -376,14 +316,9 @@
     align-items: center;
 }
 
-.call-interface.active {
-    display: flex;
-}
+.call-interface.active { display: flex; }
 
-.caller-info {
-    text-align: center;
-    margin-bottom: 50px;
-}
+.caller-info { text-align: center; margin-bottom: 50px; }
 
 .caller-avatar {
     width: 120px;
@@ -398,30 +333,14 @@
     margin: 0 auto 20px;
 }
 
-.caller-info h2 {
-    font-size: 28px;
-    margin-bottom: 10px;
-}
+.caller-info h2 { font-size: 28px; margin-bottom: 10px; }
+.caller-info p { color: #94a3b8; font-size: 18px; }
+.call-timer { font-size: 24px; color: #10b981; margin-top: 10px; }
 
-.caller-info p {
-    color: #94a3b8;
-    font-size: 18px;
-}
-
-.call-timer {
-    font-size: 24px;
-    color: #10b981;
-    margin-top: 10px;
-}
-
-.call-controls {
-    display: flex;
-    gap: 30px;
-}
+.call-controls { display: flex; gap: 30px; }
 
 .call-control-btn {
-    width: 70px;
-    height: 70px;
+    width: 70px; height: 70px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
@@ -432,38 +351,25 @@
     transition: all 0.3s ease;
 }
 
-.call-control-btn.mute {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.call-control-btn.speaker {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.call-control-btn.end {
-    background: #ef4444;
-    color: white;
-}
-
-.call-control-btn:hover {
-    transform: scale(1.1);
-}
+.call-control-btn.mute, .call-control-btn.speaker { background: rgba(255,255,255,0.2); color: white; }
+.call-control-btn.end { background: #ef4444; color: white; }
+.call-control-btn:hover { transform: scale(1.1); }
 </style>
 
 <h1 style="margin-bottom: 30px;"><i class="fas fa-map-marker-alt"></i> Suivi de Livraison</h1>
 
 <div class="delivery-container">
+    <!-- MAP -->
     <div class="map-container">
         <div id="map"></div>
         <div class="map-overlay">
-            <p><strong>� {{ store.name }}</strong> - {{ store.address }}</p>
-            <p style="color: #94a3b8; font-size: 12px; margin-top: 5px;">➜ {{ customer.address }}</p>
-            <p class="distance" id="distance-info" style="margin-top: 10px;">Calcul de l'itinéraire...</p>
+            <p><strong>🏪 {{ store.name }}</strong> — {{ store.address }}</p>
+            <p style="margin-top:4px;">➜ {{ customer.address }}</p>
+            <p class="distance" id="distance-info">Calcul de l'itinéraire...</p>
         </div>
     </div>
 
+    <!-- DRIVER INFO -->
     <div class="driver-info">
         <div class="estimated-time">
             <h3><i class="fas fa-clock"></i> Livraison estimée</h3>
@@ -472,112 +378,90 @@
         </div>
 
         <div class="driver-card">
-            <div class="driver-avatar">
-                <i class="fas fa-user"></i>
-            </div>
+            <div class="driver-avatar"><i class="fas fa-user"></i></div>
             <div class="driver-details">
                 <h3>{{ driver.name }}</h3>
-                <p>{{ driver.vehicle }} - #{{ driver.id }}</p>
-                <div class="rating">⭐⭐⭐⭐⭐ {{ driver.rating }} ({{ driver.deliveries }} livraisons)</div>
+                <p>🚲 {{ driver.vehicle }} · #{{ driver.id }}</p>
+                <div class="rating">⭐ {{ driver.rating }} ({{ driver.deliveries }} livraisons)</div>
             </div>
         </div>
 
         <h3 style="margin-bottom: 20px;"><i class="fas fa-route"></i> Statut de la commande</h3>
-        
+
         <div class="status-timeline">
             <div class="timeline-item active">
                 <i class="fas fa-check-circle"></i>
                 <div class="timeline-content">
                     <h4>Commande confirmée</h4>
-                    <p>13:45 - Votre commande est prise en charge</p>
+                    <p>Votre commande est prise en charge</p>
                 </div>
             </div>
             <div class="timeline-item active">
                 <i class="fas fa-utensils"></i>
                 <div class="timeline-content">
                     <h4>En préparation</h4>
-                    <p>13:52 - Le restaurant prépare votre commande</p>
+                    <p>Le restaurant prépare votre commande</p>
                 </div>
             </div>
             <div class="timeline-item active">
                 <i class="fas fa-box"></i>
                 <div class="timeline-content">
                     <h4>Prête pour la livraison</h4>
-                    <p>14:15 - Le livreur a récupéré votre commande</p>
+                    <p>Le livreur a récupéré votre commande</p>
                 </div>
             </div>
-            <div class="timeline-item active">
+            <div class="timeline-item active" id="step-on-way">
                 <i class="fas fa-biking"></i>
                 <div class="timeline-content">
                     <h4>En cours de livraison</h4>
-                    <p>14:20 - Le livreur est en route vers vous</p>
+                    <p>Le livreur est en route vers vous</p>
                 </div>
             </div>
-            <div class="timeline-item">
+            <div class="timeline-item" id="step-delivered">
                 <i class="fas fa-home"></i>
                 <div class="timeline-content">
                     <h4>Livraison</h4>
-                    <p>À venir...</p>
+                    <p id="delivered-time">À venir...</p>
                 </div>
             </div>
         </div>
 
-        <h3 style="margin-bottom: 15px;"><i class="fas fa-comments"></i> Communiquer avec le livreur</h3>
-        
+        <h3 style="margin-bottom: 15px;"><i class="fas fa-comments"></i> Communiquer</h3>
+
         <div class="communication-btns">
             <button class="comm-btn" onclick="startChat()">
-                <i class="fas fa-comment"></i>
-                <span>Chat</span>
+                <i class="fas fa-comment"></i><span>Chat</span>
             </button>
             <a href="tel:{{ driver.phone }}" class="comm-btn">
-                <i class="fas fa-phone"></i>
-                <span>Appel</span>
+                <i class="fas fa-phone"></i><span>Appel</span>
             </a>
             <button class="comm-btn" onclick="showSMSModal()">
-                <i class="fas fa-sms"></i>
-                <span>SMS</span>
+                <i class="fas fa-sms"></i><span>SMS</span>
             </button>
         </div>
 
         <div class="communication-btns" style="margin-top: 15px;">
-            <button class="comm-btn voice" onclick="startVoiceCall()">
-                <i class="fas fa-microphone"></i>
-                <span>Appel Vocal App</span>
-            </button>
-            <button class="comm-btn voice" onclick="startVideoCall()">
-                <i class="fas fa-video"></i>
-                <span>Video Call</span>
+            <button class="comm-btn voice" onclick="startVoiceCall()" style="grid-column: span 3;">
+                <i class="fas fa-microphone"></i><span>Appel Vocal App</span>
             </button>
         </div>
     </div>
 </div>
 
+<!-- CHAT -->
 <div class="chat-section">
     <div class="chat-header">
         <i class="fas fa-comments"></i>
         <div>
-            <h3>Discussion avec Ahmed</h3>
+            <h3>Discussion avec {{ driver.name }}</h3>
             <p style="color: #94a3b8; font-size: 14px;">Répond généralement en moins d'une minute</p>
         </div>
     </div>
-    
-    <div class="chat-messages" id="chat-messages">
-        <div class="message driver">
-            <strong>Ahmed</strong> - 14:20<br>
-            Bonjour ! J'ai récupéré votre commande chez KFC. Je serai chez vous dans environ 8 minutes ! 🚴
-        </div>
-        <div class="message customer">
-            <strong>Vous</strong> - 14:22<br>
-            Super merci ! Je suis prêt au 12 rue de la Paix
-        </div>
-        <div class="message driver">
-            <strong>Ahmed</strong> - 14:24<br>
-            Parfait, j'arrive ! 👍
-        </div>
-    </div>
-    
+
+    <div class="chat-messages" id="chat-messages"></div>
+
     <div class="chat-input">
-        <input type="text" id="chat-message" placeholder="Écrivez votre message..." onkeypress="handleKeyPress(event)">
+        <input type="text" id="chat-message" placeholder="Écrivez votre message..." onkeypress="handleKeyPress(event)" autocomplete="off">
         <button onclick="sendMessage()">
             <i class="fas fa-paper-plane"></i> Envoyer
         </button>
@@ -588,7 +472,7 @@
 <div class="sms-modal" id="sms-modal">
     <div class="modal-content">
         <h3><i class="fas fa-sms"></i> Envoyer un SMS</h3>
-        <p style="color: #94a3b8; margin-bottom: 15px;">À: Ahmed (Livreur)</p>
+        <p style="color: #94a3b8; margin-bottom: 15px;">À : {{ driver.name }} (Livreur)</p>
         <textarea id="sms-message" placeholder="Votre message..."></textarea>
         <div class="modal-buttons">
             <button class="btn-primary" onclick="sendSMS()">Envoyer SMS</button>
@@ -600,10 +484,8 @@
 <!-- Voice Call Interface -->
 <div class="call-interface" id="call-interface">
     <div class="caller-info">
-        <div class="caller-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <h2>Ahmed K.</h2>
+        <div class="caller-avatar"><i class="fas fa-user"></i></div>
+        <h2>{{ driver.name }}</h2>
         <p>Livreur MultiServe</p>
         <div class="call-timer" id="call-timer">00:00</div>
     </div>
@@ -621,286 +503,312 @@
 </div>
 
 <script>
-// Get coordinates from Django context
-const storeLat = {{ store.lat }};
-const storeLng = {{ store.lng }};
-const customerLat = {{ customer.lat }};
-const customerLng = {{ customer.lng }};
+// Charge Leaflet dynamiquement, puis lance la page
+(function() {
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
 
-// Initialize map
-let map;
-let driverMarker;
-let customerMarker;
-let storeMarker;
-let driverPosition = { lat: storeLat, lng: storeLng }; // Start from store
-let customerPosition = { lat: customerLat, lng: customerLng }; // End at customer
-let storePosition = { lat: storeLat, lng: storeLng };
+    var js = document.createElement('script');
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload  = function() { window._leafletReady = true; };
+    js.onerror = function() { window._leafletReady = false; };
+    document.head.appendChild(js);
+})();
+</script>
+<script>
+// ── Django context ──────────────────────────────────────────────
+const ORDER_ID   = '{{ order_id }}';
+const STORE_LAT  = {{ store.lat|default:"48.8554" }};
+const STORE_LNG  = {{ store.lng|default:"2.3522" }};
+const CUST_LAT   = {{ customer.lat|default:"48.8689" }};
+const CUST_LNG   = {{ customer.lng|default:"2.3310" }};
+const STORE_NAME = '{{ store.name|escapejs }}';
+const STORE_ADDR = '{{ store.address|escapejs }}';
+const CUST_ADDR  = '{{ customer.address|escapejs }}';
+const DRIVER_NAME = '{{ driver.name|escapejs }}';
 
+// ── Map state ───────────────────────────────────────────────────
+let map, driverMarker, moveInterval;
+
+
+// ════════════════════════════════════════════════════════════════
+// MAP
+// ════════════════════════════════════════════════════════════════
 function initMap() {
-    // Create map centered between driver and customer
-    const center = {
-        lat: (driverPosition.lat + customerPosition.lat) / 2,
-        lng: (driverPosition.lng + customerPosition.lng) / 2
-    };
-    
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
-        center: center,
-        styles: [
-            { elementType: "geometry", stylers: [{ color: "#1e3a5f" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#0a1628" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#748cad" }] },
-            {
-                featureType: "road",
-                elementType: "geometry",
-                stylers: [{ color: "#2d5a87" }]
-            },
-            {
-                featureType: "road",
-                elementType: "geometry.stroke",
-                stylers: [{ color: "#1e3a5f" }]
-            },
-            {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#0f172a" }]
-            }
-        ]
+    map = L.map('map', {
+        center: [(STORE_LAT + CUST_LAT) / 2, (STORE_LNG + CUST_LNG) / 2],
+        zoom: 14,
+        zoomControl: true
     });
 
-    // Driver marker
-    driverMarker = new google.maps.Marker({
-        position: driverPosition,
-        map: map,
-        icon: {
-            url: 'https://cdn-icons-png.flaticon.com/512/2928/2928956.png',
-            scaledSize: new google.maps.Size(50, 50)
-        },
-        title: 'Livreur Ahmed'
-    });
+    // Dark tiles (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Store marker
+    L.marker([STORE_LAT, STORE_LNG], { icon: makeIcon('🏪', '#ef4444') })
+     .addTo(map)
+     .bindPopup(`<b>${STORE_NAME}</b><br>${STORE_ADDR}`);
 
     // Customer marker
-    customerMarker = new google.maps.Marker({
-        position: customerPosition,
-        map: map,
-        icon: {
-            url: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-            scaledSize: new google.maps.Size(40, 40)
-        },
-        title: 'Votre position'
-    });
+    L.marker([CUST_LAT, CUST_LNG], { icon: makeIcon('📍', '#10b981') })
+     .addTo(map)
+     .bindPopup(`<b>Votre adresse</b><br>${CUST_ADDR}`);
 
-    // Draw route line
-    drawRoute();
-    
-    // Simulate driver movement
-    simulateDriverMovement();
+    // Driver marker (starts at store)
+    driverMarker = L.marker([STORE_LAT, STORE_LNG], { icon: makeIcon('🚴', '#3b82f6', true) })
+                    .addTo(map)
+                    .bindPopup(`<b>${DRIVER_NAME}</b> · Votre livreur`);
+
+    fetchRoute();
 }
 
-function drawRoute() {
-    const routePath = new google.maps.Polyline({
-        path: [driverPosition, customerPosition],
-        geodesic: true,
-        strokeColor: '#3b82f6',
-        strokeOpacity: 1.0,
-        strokeWeight: 4
-    });
-    routePath.setMap(map);
+function makeIcon(emoji, color, pulse) {
+    const style = `background:${color};width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,.45)${pulse ? ';animation:leaflet-pulse 2s infinite' : ''}`;
+    return L.divIcon({ html: `<div style="${style}">${emoji}</div>`, className: '', iconSize: [38, 38], iconAnchor: [19, 19] });
 }
 
-function simulateDriverMovement() {
-    setInterval(() => {
-        // Move driver closer to customer
-        const latDiff = customerPosition.lat - driverPosition.lat;
-        const lngDiff = customerPosition.lng - driverPosition.lng;
-        
-        driverPosition.lat += latDiff * 0.05;
-        driverPosition.lng += lngDiff * 0.05;
-        
-        driverMarker.setPosition(driverPosition);
-        
-        // Update distance
-        const distance = calculateDistance(driverPosition, customerPosition);
-        const time = Math.ceil(distance * 3); // Approx 3 min per km
-        
-        document.getElementById('distance-info').textContent = 
-            `À ${distance.toFixed(1)} km - ${time} min d'arrivée`;
-        document.getElementById('minutes-left').textContent = time;
-        
-        // Update estimated time
-        const now = new Date();
-        now.setMinutes(now.getMinutes() + time);
-        document.getElementById('estimated-time').textContent = 
-            now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-    }, 5000); // Update every 5 seconds
+// ── Route via OSRM ───────────────────────────────────────────────
+async function fetchRoute() {
+    try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${STORE_LNG},${STORE_LAT};${CUST_LNG},${CUST_LAT}?overview=full&geometries=geojson`;
+        const data = await (await fetch(url)).json();
+
+        if (!data.routes || !data.routes[0]) throw new Error('no route');
+
+        const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+        const distKm  = (data.routes[0].distance / 1000).toFixed(1);
+        const durMin  = Math.ceil(data.routes[0].duration / 60);
+
+        drawRouteAndStart(coords, distKm, durMin);
+    } catch {
+        // Fallback: straight line
+        const coords = [[STORE_LAT, STORE_LNG], [CUST_LAT, CUST_LNG]];
+        const distKm  = haversine(STORE_LAT, STORE_LNG, CUST_LAT, CUST_LNG).toFixed(1);
+        const durMin  = Math.ceil(distKm * 3);
+        drawRouteAndStart(coords, distKm, durMin);
+    }
 }
 
-function calculateDistance(pos1, pos2) {
-    const R = 6371; // Earth's radius in km
-    const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
-    const dLon = (pos2.lng - pos1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+function drawRouteAndStart(coords, distKm, durMin) {
+    const polyline = L.polyline(coords, { color: '#3b82f6', weight: 5, opacity: 0.85, dashArray: '8 6' }).addTo(map);
+    map.fitBounds(polyline.getBounds(), { padding: [55, 55] });
+
+    document.getElementById('distance-info').textContent = `À ${distKm} km · ~${durMin} min d'arrivée`;
+    setETA(durMin);
+    animateDriver(coords, durMin);
 }
 
-// Chat functionality
+function setETA(minutes) {
+    const eta = new Date();
+    eta.setMinutes(eta.getMinutes() + minutes);
+    document.getElementById('estimated-time').textContent =
+        eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Driver animation along route ─────────────────────────────────
+function animateDriver(coords, totalMinutes) {
+    let idx = 0;
+    const total = coords.length;
+    const step  = Math.max(1500, Math.min((totalMinutes * 60000) / total, 7000));
+
+    clearInterval(moveInterval);
+    moveInterval = setInterval(() => {
+        if (idx >= total - 1) {
+            clearInterval(moveInterval);
+            markDelivered();
+            return;
+        }
+        idx++;
+        const [lat, lng] = coords[idx];
+        driverMarker.setLatLng([lat, lng]);
+
+        const remaining = haversine(lat, lng, CUST_LAT, CUST_LNG);
+        const minsLeft  = Math.ceil(remaining * 3);
+        document.getElementById('distance-info').textContent =
+            remaining < 0.05
+                ? '✅ Le livreur est arrivé !'
+                : `À ${remaining.toFixed(2)} km · ~${minsLeft} min`;
+        if (minsLeft > 0) setETA(minsLeft);
+    }, step);
+}
+
+function markDelivered() {
+    document.getElementById('distance-info').textContent = '✅ Livraison effectuée !';
+    document.getElementById('estimated-time').textContent = 'Livré !';
+    document.getElementById('step-delivered').classList.add('active');
+    document.getElementById('delivered-time').textContent =
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function haversine(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHAT (simulation locale)
+// ════════════════════════════════════════════════════════════════
+function initChat() {
+    // Message de bienvenue du livreur à l'ouverture
+    setTimeout(() => {
+        appendMsg('driver', DRIVER_NAME, "Bonjour ! J'ai récupéré votre commande. Je serai chez vous dans environ 8 minutes ! 🚴", now());
+    }, 800);
+}
+
+function sendMessage() {
+    const input = document.getElementById('chat-message');
+    const msg   = input.value.trim();
+    if (!msg) return;
+
+    appendMsg('customer', 'Vous', msg, now());
+    showTyping();
+    setTimeout(() => {
+        removeTyping();
+        appendMsg('driver', DRIVER_NAME, offlineReply(msg), now());
+    }, 1500);
+
+    input.value = '';
+}
+
+function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+function appendMsg(type, name, content, time) {
+    const box = document.getElementById('chat-messages');
+    const el  = document.createElement('div');
+    el.className = `message ${type}`;
+    el.innerHTML = `<strong>${name}</strong> <span style="opacity:.6;font-size:12px">${time}</span><br>${content}`;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+    removeTyping();
+    const box = document.getElementById('chat-messages');
+    const el  = document.createElement('div');
+    el.className = 'typing-indicator';
+    el.id = 'typing-el';
+    el.innerHTML = '<span></span><span></span><span></span>';
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+}
+
+function removeTyping() {
+    const el = document.getElementById('typing-el');
+    if (el) el.remove();
+}
+
+function now() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Offline auto-reply (mirrors consumer logic)
+function offlineReply(msg) {
+    const m = msg.toLowerCase();
+    if (/bonjour|bjr|salut|hello/.test(m)) return 'Oui bonjour ! Je suis en route 😊';
+    if (/merci/.test(m))                    return "De rien, j'arrive bientôt !";
+    if (/où|arrivez|arrives|viens/.test(m)) return "J'arrive dans quelques minutes ! 🚴";
+    if (/combien|temps|longtemps/.test(m))  return 'Environ 5 minutes encore ⏱️';
+    if (/porte|code|digicode/.test(m))      return 'Noté, merci ! 📝';
+    if (/étage|escalier/.test(m))           return 'Parfait, je monte ! 🏢';
+    if (/ok|parfait|super|dac/.test(m))     return 'Super, à tout de suite ! 👍';
+    return '👍 Reçu !';
+}
+
+// ════════════════════════════════════════════════════════════════
+// COMMUNICATION BUTTONS
+// ════════════════════════════════════════════════════════════════
 function startChat() {
     document.querySelector('.chat-section').scrollIntoView({ behavior: 'smooth' });
     document.getElementById('chat-message').focus();
 }
 
-function sendMessage() {
-    let input = document.getElementById('chat-message');
-    let message = input.value.trim();
-    
-    if (message) {
-        let chatMessages = document.getElementById('chat-messages');
-        let newMessage = document.createElement('div');
-        newMessage.className = 'message customer';
-        newMessage.innerHTML = '<strong>Vous</strong> - ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '<br>' + message;
-        chatMessages.appendChild(newMessage);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        input.value = '';
-        
-        // Simulate driver response
-        setTimeout(() => {
-            let response = document.createElement('div');
-            response.className = 'message driver';
-            response.innerHTML = '<strong>Ahmed</strong> - ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '<br>👍 Reçu !';
-            chatMessages.appendChild(response);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 2000);
-    }
-}
-
-function handleKeyPress(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
-    }
-}
-
-// SMS functionality
-function showSMSModal() {
-    document.getElementById('sms-modal').style.display = 'flex';
-}
-
-function closeSMSModal() {
-    document.getElementById('sms-modal').style.display = 'none';
-}
+function showSMSModal() { document.getElementById('sms-modal').style.display = 'flex'; }
+function closeSMSModal() { document.getElementById('sms-modal').style.display = 'none'; }
 
 function sendSMS() {
-    const message = document.getElementById('sms-message').value.trim();
-    if (message) {
-        // In production, this would call your backend API
-        fetch('/api/send-sms/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                to: '0612345678',
-                message: message,
-                driver_id: 'LVR-2847'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert('✅ SMS envoyé au livreur avec succès !');
-            closeSMSModal();
-            document.getElementById('sms-message').value = '';
-        })
-        .catch(error => {
-            // Fallback for demo
-            alert('✅ SMS envoyé : "' + message + '"');
-            closeSMSModal();
-            document.getElementById('sms-message').value = '';
-        });
-    }
+    const msg = document.getElementById('sms-message').value.trim();
+    if (!msg) return;
+    fetch('/api/send-sms/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ to: '{{ driver.phone }}', message: msg })
+    }).catch(() => {});
+    alert('✅ SMS envoyé au livreur !');
+    closeSMSModal();
+    document.getElementById('sms-message').value = '';
 }
 
-// Voice call functionality
-let callTimer;
-let callSeconds = 0;
-let isMuted = false;
-let isSpeakerOn = false;
+let callTimer, callSecs = 0;
 
 function startVoiceCall() {
     document.getElementById('call-interface').classList.add('active');
-    callSeconds = 0;
-    updateCallTimer();
-    callTimer = setInterval(updateCallTimer, 1000);
-    
-    // In production, initialize WebRTC here
-    console.log('Starting voice call with driver...');
-}
-
-function startVideoCall() {
-    alert('📹 Démarrage de l\'appel vidéo avec Ahmed...\n\nFonctionnalité en cours de développement.');
-}
-
-function updateCallTimer() {
-    callSeconds++;
-    const mins = Math.floor(callSeconds / 60).toString().padStart(2, '0');
-    const secs = (callSeconds % 60).toString().padStart(2, '0');
-    document.getElementById('call-timer').textContent = `${mins}:${secs}`;
-}
-
-function toggleMute() {
-    isMuted = !isMuted;
-    const icon = document.getElementById('mute-icon');
-    if (isMuted) {
-        icon.classList.remove('fa-microphone');
-        icon.classList.add('fa-microphone-slash');
-    } else {
-        icon.classList.remove('fa-microphone-slash');
-        icon.classList.add('fa-microphone');
-    }
-}
-
-function toggleSpeaker() {
-    isSpeakerOn = !isSpeakerOn;
-    const icon = document.getElementById('speaker-icon');
-    if (isSpeakerOn) {
-        icon.classList.remove('fa-volume-up');
-        icon.classList.add('fa-volume-mute');
-    } else {
-        icon.classList.remove('fa-volume-mute');
-        icon.classList.add('fa-volume-up');
-    }
+    callSecs = 0;
+    callTimer = setInterval(() => {
+        callSecs++;
+        const m = String(Math.floor(callSecs/60)).padStart(2,'0');
+        const s = String(callSecs%60).padStart(2,'0');
+        document.getElementById('call-timer').textContent = `${m}:${s}`;
+    }, 1000);
 }
 
 function endCall() {
     clearInterval(callTimer);
     document.getElementById('call-interface').classList.remove('active');
-    callSeconds = 0;
     document.getElementById('call-timer').textContent = '00:00';
+    callSecs = 0;
 }
 
-// Close modals on outside click
-window.onclick = function(event) {
-    const smsModal = document.getElementById('sms-modal');
-    if (event.target === smsModal) {
-        closeSMSModal();
-    }
+function toggleMute() {
+    const i = document.getElementById('mute-icon');
+    i.className = i.className.includes('slash') ? 'fas fa-microphone' : 'fas fa-microphone-slash';
 }
 
-// Load Google Maps API
-function loadGoogleMapsAPI() {
-    const script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDummyKeyForDevelopment&callback=initMap';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+function toggleSpeaker() {
+    const i = document.getElementById('speaker-icon');
+    i.className = i.className.includes('mute') ? 'fas fa-volume-up' : 'fas fa-volume-mute';
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadGoogleMapsAPI();
+window.onclick = (e) => { if (e.target === document.getElementById('sms-modal')) closeSMSModal(); };
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    // Chat en premier — indépendant de la carte
+    initChat();
+
+    // Carte — attend que Leaflet soit chargé (max 5 s)
+    waitForLeaflet(function() {
+        try { initMap(); } catch(err) {
+            console.warn('Map init error:', err);
+            showMapFallback('Carte temporairement indisponible.');
+        }
+    });
 });
+
+function waitForLeaflet(cb, tries) {
+    tries = tries || 0;
+    if (typeof L !== 'undefined') { cb(); return; }
+    if (tries > 50) { showMapFallback('Carte indisponible (réseau).'); return; }
+    setTimeout(function() { waitForLeaflet(cb, tries + 1); }, 100);
+}
+
+function showMapFallback(msg) {
+    document.getElementById('map').innerHTML =
+        `<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#94a3b8;flex-direction:column;gap:12px">
+            <i class="fas fa-map-marked-alt" style="font-size:48px;color:#3b82f6"></i>
+            <span style="font-size:14px">${msg}</span>
+         </div>`;
+}
+
 </script>
 {% endblock %}

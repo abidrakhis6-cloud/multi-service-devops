@@ -34,12 +34,14 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'django_prometheus',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -57,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -78,6 +82,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database
@@ -85,14 +90,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 import os
 
-# Database configuration - Use PostgreSQL on Render, SQLite locally
+# Database configuration - PostgreSQL via DATABASE_URL or individual DB_* vars
 DATABASE_URL = os.environ.get('DATABASE_URL')
+if not DATABASE_URL:
+    _db_host = os.environ.get('DB_HOST', '')
+    _db_name = os.environ.get('DB_NAME', '')
+    _db_user = os.environ.get('DB_USER', '')
+    _db_password = os.environ.get('DB_PASSWORD', '')
+    _db_port = os.environ.get('DB_PORT', '5432')
+    if _db_host and _db_name:
+        DATABASE_URL = f'postgresql://{_db_user}:{_db_password}@{_db_host}:{_db_port}/{_db_name}'
+
 if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL)
     }
 else:
-    # Use SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -265,3 +278,19 @@ LOGGING = {
         },
     },
 }
+
+# ============ DJANGO CHANNELS (WebSockets) ============
+_redis_url = os.environ.get('REDIS_URL', '')
+if _redis_url:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [_redis_url]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        }
+    }

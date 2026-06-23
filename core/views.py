@@ -1,7 +1,10 @@
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from datetime import datetime
 from .models import Store, Product, Cart, CartItem, Order, Driver, Payment, Message
 
@@ -374,35 +377,72 @@ def pharmacie_detail(request, name):
     return render(request, 'pharmacie_detail.html', {'store': store, 'products': products})
 
 
+@require_POST
+def save_order_api(request):
+    try:
+        data = json.loads(request.body)
+        request.session['customer_address'] = {
+            'address': data.get('address', ''),
+            'lat': float(data.get('lat', 48.8689)),
+            'lng': float(data.get('lng', 2.3310)),
+        }
+        if data.get('store'):
+            request.session['current_store'] = data['store']
+        request.session.modified = True
+        if not request.session.session_key:
+            request.session.save()
+        return JsonResponse({'status': 'ok', 'order_id': request.session.session_key or 'demo'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
 def livraison(request):
-    # Get current order info from session or create default
     store = request.session.get('current_store', {
         'name': 'KFC',
         'address': '12 Rue de Rivoli, 75004 Paris',
         'lat': 48.8554,
         'lng': 2.3522
     })
-    
-    # Get customer address
+
     customer_address = request.session.get('customer_address', {
         'address': '25 Rue de la Paix, 75002 Paris',
         'lat': 48.8689,
         'lng': 2.3310
     })
-    
+
+    if not request.session.session_key:
+        request.session.save()
+    order_id = request.session.session_key or 'demo'
+
     context = {
         'store': store,
         'customer': customer_address,
+        'order_id': order_id,
         'driver': {
             'name': 'Ahmed K.',
             'phone': '0612345678',
-            'vehicle': '🚲 Vélo électrique',
+            'vehicle': 'Vélo électrique',
             'id': 'LVR-2847',
             'rating': 4.9,
             'deliveries': 128
         }
     }
     return render(request, 'livraison.html', context)
+
+
+def demo_login(request):
+    from django.contrib.auth.models import User
+    username = 'demo'
+    password = 'Demo@MultiServe2024'
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={'email': 'demo@multiserve.fr', 'first_name': 'Utilisateur', 'last_name': 'Démo'}
+    )
+    if created:
+        user.set_password(password)
+        user.save()
+    login(request, user)
+    return redirect('home')
 
 
 def cart_view(request):
@@ -414,10 +454,20 @@ def checkout_view(request):
 
 
 def user_login(request):
+    from django.contrib.auth.models import User
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
+        identifier = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        # Try direct username auth first, then look up by email
+        user = authenticate(request, username=identifier, password=password)
+        if user is None and '@' in identifier:
+            try:
+                matched = User.objects.get(email__iexact=identifier)
+                user = authenticate(request, username=matched.username, password=password)
+            except User.DoesNotExist:
+                pass
+
         if user is not None:
             login(request, user)
             return redirect('home')
@@ -432,6 +482,45 @@ def user_logout(request):
 
 
 def register(request):
+    from django.contrib.auth.models import User
+    if request.method == 'POST':
+        first_name       = request.POST.get('first_name', '').strip()
+        last_name        = request.POST.get('last_name', '').strip()
+        email            = request.POST.get('email', '').strip().lower()
+        phone            = request.POST.get('phone', '').strip()
+        password         = request.POST.get('password', '')
+        password_confirm = request.POST.get('password_confirm', '')
+
+        errors = []
+        if not email and not phone:
+            errors.append("Renseignez un email ou un numéro de téléphone.")
+        if email and User.objects.filter(email=email).exists():
+            errors.append("Cet email est déjà utilisé.")
+        if len(password) < 8:
+            errors.append("Le mot de passe doit contenir au moins 8 caractères.")
+        if password != password_confirm:
+            errors.append("Les mots de passe ne correspondent pas.")
+
+        if errors:
+            return render(request, 'register.html', {'errors': errors, 'form': request.POST})
+
+        # Build a unique username from email or phone
+        base = (email.split('@')[0] if email else phone.replace(' ', '')) or 'user'
+        username, n = base, 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base}{n}"; n += 1
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+        )
+        login(request, user)
+        messages.success(request, f"Bienvenue {first_name or username} ! Compte créé avec succès.")
+        return redirect('home')
+
     return render(request, 'register.html')
 
 
@@ -441,30 +530,18 @@ def bank_setup(request):
 
 
 def user_registration(request):
-    """User registration with S3 storage"""
+    """User registration"""
     if request.method == 'POST':
         name = request.POST.get('name')
         email = request.POST.get('email')
-        message = request.POST.get('message')
-        
+
         if name and email:
-            try:
-                from .s3_storage import s3_storage
-                result = s3_storage.save_user_data(name, email, message)
-                
-                if result['success']:
-                    messages.success(request, f"Inscription réussie ! Vos données ont été enregistrées (ID: {result['user_id'][:8]}...)")
-                else:
-                    messages.error(request, f"Erreur lors de l'enregistrement: {result['error']}")
-                    messages.info(request, "Données sauvegardées localement.")
-            except Exception as e:
-                messages.error(request, f"Erreur S3: {str(e)}")
-                messages.info(request, "Vérifiez la configuration AWS.")
+            messages.success(request, f"Inscription réussie ! Bienvenue {name}.")
         else:
             messages.error(request, "Nom et email sont obligatoires.")
-        
+
         return redirect('user_registration')
-    
+
     return render(request, 'registration_form.html')
 
 

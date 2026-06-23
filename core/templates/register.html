@@ -144,41 +144,49 @@
             <p>Rejoignez MultiServe et profitez de nos services</p>
         </div>
 
+        {% if errors %}
+        <div style="background:rgba(239,68,68,.15);border:1px solid #ef4444;border-radius:12px;padding:15px;margin-bottom:20px;">
+            {% for err in errors %}
+            <p style="color:#f87171;font-size:14px;margin:0 0 4px;">⚠ {{ err }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <form method="post" action="/register/">
             {% csrf_token %}
-            
+
             <div class="name-row">
                 <div class="form-group">
                     <label>Prénom</label>
-                    <input type="text" name="first_name" placeholder="Jean" required>
+                    <input type="text" name="first_name" placeholder="Jean" value="{{ form.first_name|default:'' }}">
                 </div>
                 <div class="form-group">
                     <label>Nom</label>
-                    <input type="text" name="last_name" placeholder="Dupont" required>
+                    <input type="text" name="last_name" placeholder="Dupont" value="{{ form.last_name|default:'' }}">
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Adresse email</label>
+                <label>Email <span style="color:#94a3b8;font-weight:400">(ou téléphone ci-dessous)</span></label>
                 <div class="input-icon">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" placeholder="jean.dupont@email.com" required>
+                    <input type="email" name="email" placeholder="jean.dupont@email.com" value="{{ form.email|default:'' }}">
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Téléphone</label>
+                <label>Téléphone <span style="color:#94a3b8;font-weight:400">(ou email ci-dessus)</span></label>
                 <div class="input-icon">
                     <i class="fas fa-phone"></i>
-                    <input type="tel" name="phone" placeholder="06 12 34 56 78" required>
+                    <input type="tel" name="phone" placeholder="06 12 34 56 78" value="{{ form.phone|default:'' }}">
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Mot de passe</label>
+                <label>Mot de passe <span style="color:#94a3b8;font-weight:400">(min. 8 caractères)</span></label>
                 <div class="input-icon">
                     <i class="fas fa-lock"></i>
-                    <input type="password" name="password" placeholder="Minimum 8 caractères" required>
+                    <input type="password" name="password" placeholder="••••••••" required>
                 </div>
             </div>
 
@@ -186,13 +194,8 @@
                 <label>Confirmer le mot de passe</label>
                 <div class="input-icon">
                     <i class="fas fa-lock"></i>
-                    <input type="password" name="password_confirm" placeholder="Confirmez votre mot de passe" required>
+                    <input type="password" name="password_confirm" placeholder="••••••••" required>
                 </div>
-            </div>
-
-            <div class="terms">
-                <input type="checkbox" id="terms" required>
-                <label for="terms">J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a></label>
             </div>
 
             <button type="submit" class="btn auth-btn">
@@ -209,23 +212,12 @@
 
 <script>
 document.querySelector('form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    let password = document.querySelector('input[name="password"]').value;
-    let confirm = document.querySelector('input[name="password_confirm"]').value;
-    
-    if (password !== confirm) {
+    const pwd  = document.querySelector('input[name="password"]').value;
+    const pwd2 = document.querySelector('input[name="password_confirm"]').value;
+    if (pwd !== pwd2) {
+        e.preventDefault();
         alert('❌ Les mots de passe ne correspondent pas !');
-        return;
     }
-    
-    if (password.length < 8) {
-        alert('❌ Le mot de passe doit contenir au moins 8 caractères !');
-        return;
-    }
-    
-    alert('✅ Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
-    window.location.href = '/login/';
 });
 </script>
 {% endblock %}

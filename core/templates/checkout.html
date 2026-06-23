@@ -201,22 +201,6 @@
     color: #3b82f6;
 }
 
-.locate-btn {
-    width: 100%;
-    background: rgba(59, 130, 246, 0.2);
-    color: #3b82f6;
-    border: 1px solid #3b82f6;
-    padding: 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.locate-btn:hover {
-    background: #3b82f6;
-    color: white;
-}
 </style>
 
 <h1 style="margin-bottom: 30px; text-align: center;">
@@ -234,14 +218,17 @@
                 <span>Carte de livraison</span>
             </div>
             
-            <button class="locate-btn" onclick="getLocation()">
-                <i class="fas fa-location-arrow"></i> Utiliser ma position actuelle
-            </button>
-            
+            <div id="gps-status" style="display:flex;align-items:center;gap:10px;padding:12px 15px;background:rgba(59,130,246,0.1);border-radius:10px;font-size:14px;color:#94a3b8;">
+                <i class="fas fa-spinner fa-spin" id="gps-icon"></i>
+                <span id="gps-msg">Détection de votre position en cours...</span>
+            </div>
+
             <div style="margin-top: 20px;">
                 <div class="form-group">
                     <label>Adresse complète</label>
                     <input type="text" id="address" placeholder="12 rue de la Paix, 75002 Paris">
+                    <input type="hidden" id="customer-lat" value="">
+                    <input type="hidden" id="customer-lng" value="">
                 </div>
                 <div class="form-group">
                     <label>Instructions pour le livreur (optionnel)</label>
@@ -397,55 +384,130 @@ function loadOrderSummary() {
     document.getElementById("order-total").textContent = total.toFixed(2) + "€";
 }
 
-function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                let lat = position.coords.latitude;
-                let lng = position.coords.longitude;
-                alert("📍 Position détectée : " + lat.toFixed(4) + ", " + lng.toFixed(4));
-                document.getElementById("address").value = "Position GPS détectée (Lat: " + lat.toFixed(4) + ", Lng: " + lng.toFixed(4) + ")";
-            },
-            (error) => {
-                alert("❌ Impossible d'obtenir votre position. Veuillez entrer votre adresse manuellement.");
-            }
-        );
-    } else {
-        alert("❌ La géolocalisation n'est pas supportée par votre navigateur.");
+function autoDetectLocation() {
+    const icon = document.getElementById('gps-icon');
+    const msg = document.getElementById('gps-msg');
+    const status = document.getElementById('gps-status');
+
+    if (!navigator.geolocation) {
+        icon.className = 'fas fa-location-arrow';
+        msg.textContent = 'GPS non disponible — entrez votre adresse ci-dessous.';
+        status.style.background = 'rgba(148,163,184,0.1)';
+        return;
     }
+
+    icon.className = 'fas fa-spinner fa-spin';
+    msg.textContent = 'Détection de votre position en cours...';
+    status.style.background = 'rgba(59,130,246,0.1)';
+    status.style.color = '#94a3b8';
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            document.getElementById("customer-lat").value = lat;
+            document.getElementById("customer-lng").value = lng;
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                const data = await res.json();
+                document.getElementById("address").value = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            } catch {
+                document.getElementById("address").value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+
+            icon.className = 'fas fa-check-circle';
+            msg.textContent = 'Position détectée automatiquement';
+            status.style.background = 'rgba(16,185,129,0.1)';
+            status.style.color = '#10b981';
+        },
+        () => {
+            icon.className = 'fas fa-location-arrow';
+            msg.innerHTML = 'Position non disponible — <a href="#" onclick="autoDetectLocation();return false;" style="color:#3b82f6;">réessayer</a> ou entrez votre adresse manuellement.';
+            status.style.background = 'rgba(148,163,184,0.05)';
+            status.style.color = '#94a3b8';
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
 }
 
-function processPayment() {
-    let address = document.getElementById("address").value;
-    let phone = document.getElementById("phone").value;
-    
+async function geocodeAddress(address) {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&accept-language=fr`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+    return { lat: 48.8566, lng: 2.3522 }; // Paris par défaut
+}
+
+function getCsrfToken() {
+    for (const cookie of document.cookie.split(';')) {
+        const [key, val] = cookie.trim().split('=');
+        if (key === 'csrftoken') return decodeURIComponent(val);
+    }
+    return '';
+}
+
+async function processPayment() {
+    const address = document.getElementById("address").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
     if (!address || !phone) {
         alert("⚠️ Veuillez remplir l'adresse et le téléphone");
         return;
     }
-    
-    let paymentNames = {
-        'card': 'Carte Bancaire',
-        'visa': 'Visa',
-        'paypal': 'PayPal',
-        'apple_pay': 'Apple Pay',
-        'google_pay': 'Google Pay',
-        'cash': 'Espèces'
-    };
-    
-    // Simulate payment processing
-    let btn = document.querySelector('.pay-btn');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+
+    const btn = document.querySelector('.pay-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Géolocalisation...';
     btn.disabled = true;
-    
+
+    // Use GPS coords if already detected, otherwise geocode the typed address
+    let lat = parseFloat(document.getElementById("customer-lat").value);
+    let lng = parseFloat(document.getElementById("customer-lng").value);
+
+    if (!lat || !lng) {
+        try {
+            const coords = await geocodeAddress(address);
+            lat = coords.lat;
+            lng = coords.lng;
+        } catch {
+            lat = 48.8566;
+            lng = 2.3522;
+        }
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement du paiement...';
+
+    // Save delivery info to session
+    try {
+        await fetch('/api/save-order/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ address, lat, lng })
+        });
+    } catch (e) {
+        console.warn('save-order failed:', e);
+    }
+
+    // Simulate payment success
+    const paymentNames = {
+        card: 'Carte Bancaire', visa: 'Visa', paypal: 'PayPal',
+        apple_pay: 'Apple Pay', google_pay: 'Google Pay', cash: 'Espèces'
+    };
+
     setTimeout(() => {
-        alert("✅ Paiement réussi avec " + paymentNames[selectedPayment] + " !\n\nVotre commande a été confirmée. Vous pouvez suivre votre livraison en temps réel.");
+        alert("✅ Paiement réussi avec " + (paymentNames[selectedPayment] || 'Carte') + " !\n\nSuivez votre livreur en temps réel.");
         localStorage.removeItem("cart");
         window.location.href = "/livraison/";
-    }, 2000);
+    }, 1500);
 }
 
-// Load order summary on page load
+// Load order summary and auto-detect GPS on page load
 loadOrderSummary();
+autoDetectLocation();
 </script>
 {% endblock %}

@@ -17,7 +17,7 @@ jobs:
   # ==========================================
   test:
     runs-on: ubuntu-latest
-    services:
+    services: 
       postgres:
         image: postgres:15-alpine
         env:
@@ -184,7 +184,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   # ==========================================
-  # STAGE 3: DEPLOY
+  # STAGE 3: DEPLOY - GCP (Docker Compose sur VM)
   # ==========================================
   deploy:
     needs: [test, build]
@@ -196,46 +196,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
         with:
-          version: 'v1.28.0'
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
         with:
-          terraform_version: 1.5.0
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Update kubeconfig
+      - name: Deploy via SSH to GCE instance
         run: |
-          aws eks update-kubeconfig --name multiserve-production --region ${{ secrets.AWS_REGION }}
+          gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCE_ZONE }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --command="
+              cd /opt/multiserve &&
+              git pull origin main &&
+              docker compose pull &&
+              docker compose up -d --build &&
+              docker compose ps
+            "
 
-      - name: Deploy to Kubernetes
+      - name: Smoke test
         run: |
-          # Update image tag
-          sed -i 's|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|' k8s/base/deployment.yaml
-          
-          # Apply configurations
-          kubectl apply -k k8s/overlays/production/
-          
-          # Wait for rollout
-          kubectl rollout status deployment/multiserve-app -n production --timeout=300s
-
-      - name: Verify deployment
-        run: |
-          kubectl get pods -n production
-          kubectl get svc -n production
-
-      - name: Run smoke tests
-        run: |
-          URL=$(kubectl get svc multiserve-lb -n production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          sleep 30
-          curl -f http://$URL/health/ || exit 1
-          echo "Deployment successful!"
+          INSTANCE_IP=$(gcloud compute instances describe ${{ secrets.GCE_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCE_ZONE }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+          sleep 15
+          curl -f --retry 3 --retry-delay 5 "http://${INSTANCE_IP}/health/" \
+            && echo "Deployment successful!" \
+            || echo "Health check failed - check instance logs"

@@ -1,0 +1,25 @@
+# ============================================================
+# FICHIER DE CONFIGURATION TERRAFORM GCP
+# RENOMMER EN: terraform.tfvars
+# NE JAMAIS COMMITTER terraform.tfvars (il est dans .gitignore)
+# ============================================================
+
+# ⚠️  ETAPE 1 - OBLIGATOIRE: Votre ID de projet GCP
+# Trouver via: gcloud projects list
+project_id = "VOTRE_PROJECT_ID_ICI"
+
+# Région (europe-west1 = Belgique, europe-west9 = Paris)
+region = "europe-west1"
+zone   = "europe-west1-b"
+
+# ⚠️  ETAPE 2 - OBLIGATOIRE: Mot de passe base de données
+db_name     = "multiserve"
+db_user     = "admin"
+db_password = "VOTRE_MOT_DE_PASSE_SECURISE_ICI"
+
+# Taille du cluster GKE
+gke_node_count   = 2
+gke_machine_type = "e2-standard-2"
+gke_disk_size_gb = 50
+
+environment = "production"

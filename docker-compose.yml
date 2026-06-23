@@ -32,7 +32,7 @@ services:
       
       # Security
       - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,app}
       
       # Media/Static
       - MEDIA_URL=/media/
@@ -115,8 +115,8 @@ services:
     container_name: multiserve_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
@@ -171,6 +171,7 @@ services:
       - prometheus_data:/prometheus
     networks:
       - backend
+      - frontend
     ports:
       - "9090:9090"
 
@@ -185,8 +186,8 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost/grafana}
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3001}
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
       - GF_AUTH_ANONYMOUS_ENABLED=false
     volumes:
       - grafana_data:/var/lib/grafana
@@ -216,6 +217,7 @@ services:
       - alertmanager_data:/alertmanager
     networks:
       - backend
+      - frontend
     ports:
       - "9093:9093"
     depends_on:
