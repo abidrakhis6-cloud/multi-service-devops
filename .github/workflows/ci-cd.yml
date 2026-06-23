@@ -273,7 +273,6 @@ jobs:
           gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
-            --tunnel-through-iap \
             --quiet \
             --command="bash -s" < deploy.sh
 
