@@ -205,6 +205,7 @@ jobs:
 
       - name: Déploiement via metadata sur l'instance GCE
         run: |
+          set -xe
           IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app:${{ needs.build.outputs.image_tag }}"
           ACCESS_TOKEN="$(gcloud auth print-access-token)"
 
@@ -256,6 +257,9 @@ jobs:
 
           sed -i "s|IMAGE_REF|${IMAGE_REF}|g" /tmp/startup-deploy.sh
           sed -i "s|__ACCESS_TOKEN__|${ACCESS_TOKEN}|g" /tmp/startup-deploy.sh
+          echo "--- START startup-deploy.sh ---"
+          cat /tmp/startup-deploy.sh
+          echo "--- END startup-deploy.sh ---"
           gcloud compute instances add-metadata ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
