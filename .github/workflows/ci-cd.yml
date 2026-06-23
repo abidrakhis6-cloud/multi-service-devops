@@ -261,6 +261,7 @@ jobs:
           docker image prune -f
           EOF
 
+          sed -i 's/^          //' /tmp/startup-deploy.sh
           sed -i "s|IMAGE_REF|${IMAGE_REF}|g" /tmp/startup-deploy.sh
           sed -i "s|__ACCESS_TOKEN__|${ACCESS_TOKEN}|g" /tmp/startup-deploy.sh
           echo "--- START startup-deploy.sh ---"
