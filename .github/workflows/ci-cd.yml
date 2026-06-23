@@ -219,6 +219,7 @@ jobs:
           gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
+            --tunnel-through-iap \
             --quiet \
             --command="
               set -e
@@ -226,23 +227,45 @@ jobs:
               echo '>>> Authentification Artifact Registry...'
               gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
-              echo '>>> Mise à jour du code...'
-              git config --global --add safe.directory /opt/multiserve
-              cd /opt/multiserve
-              git pull origin main
+              TARGET_DIR=/opt/multiserve
+              echo '>>> Vérification du dépôt dans' $TARGET_DIR
+              if [ ! -d \"${TARGET_DIR}/.git\" ]; then
+                echo '>>> Dépôt absent ou non cloné. Clonage...'
+                sudo mkdir -p /opt
+                sudo chown \"$(whoami):$(whoami)\" /opt
+                git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git \"${TARGET_DIR}\"
+              fi
+
+              cd \"${TARGET_DIR}\"
+              git config --global --add safe.directory \"${TARGET_DIR}\"
+              git fetch --all --prune
+              git reset --hard origin/main
+              git clean -fd
 
               echo '>>> Mise à jour du tag image...'
-              sed -i 's|^APP_IMAGE=.*|APP_IMAGE=${IMAGE_REF}|' .env || \
-              echo 'APP_IMAGE=${IMAGE_REF}' >> .env
+              if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
+                sed -i 's|^APP_IMAGE=.*|APP_IMAGE=${IMAGE_REF}|' .env
+              else
+                echo "APP_IMAGE=${IMAGE_REF}" >> .env
+              fi
+
+              if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+                COMPOSE_CMD='docker compose'
+              elif command -v docker-compose >/dev/null 2>&1; then
+                COMPOSE_CMD='docker-compose'
+              else
+                echo 'Docker Compose introuvable'
+                exit 1
+              fi
 
               echo '>>> Pull de la nouvelle image...'
-              docker compose pull app
+              eval "${COMPOSE_CMD} pull app"
 
               echo '>>> Redémarrage des services...'
-              docker compose up -d --no-build
+              eval "${COMPOSE_CMD} up -d --no-build"
 
               echo '>>> État des conteneurs...'
-              docker compose ps
+              eval "${COMPOSE_CMD} ps"
 
               echo '>>> Nettoyage des anciennes images...'
               docker image prune -f
