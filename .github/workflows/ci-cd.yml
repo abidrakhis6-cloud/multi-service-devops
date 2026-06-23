@@ -215,61 +215,66 @@ jobs:
       - name: Déploiement via SSH sur l'instance GCE
         run: |
           IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app:${{ needs.build.outputs.image_tag }}"
+          DEPLOY_SCRIPT=$(cat <<'EOF'
+set -e
+
+echo '>>> Authentification Artifact Registry...'
+gcloud auth configure-docker REPLACE_GCP_REGION-docker.pkg.dev --quiet
+
+TARGET_DIR=/opt/multiserve
+echo '>>> Vérification du dépôt dans' "$TARGET_DIR"
+if [ ! -d "$TARGET_DIR/.git" ]; then
+  echo '>>> Dépôt absent ou non cloné. Clonage...'
+  sudo mkdir -p /opt
+  sudo chown "$(whoami):$(whoami)" /opt
+  git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git "$TARGET_DIR"
+fi
+
+cd "$TARGET_DIR"
+git config --global --add safe.directory "$TARGET_DIR"
+git fetch --all --prune
+git reset --hard origin/main
+git clean -fd
+
+echo '>>> Mise à jour du tag image...'
+if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
+  sed -i 's|^APP_IMAGE=.*|APP_IMAGE=REPLACE_IMAGE_REF|' .env
+else
+  echo 'APP_IMAGE=REPLACE_IMAGE_REF' >> .env
+fi
+
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  COMPOSE_CMD='docker compose'
+elif command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE_CMD='docker-compose'
+else
+  echo 'Docker Compose introuvable'
+  exit 1
+fi
+
+echo '>>> Pull de la nouvelle image...'
+eval "$COMPOSE_CMD pull app"
+
+echo '>>> Redémarrage des services...'
+eval "$COMPOSE_CMD up -d --no-build"
+
+echo '>>> État des conteneurs...'
+eval "$COMPOSE_CMD ps"
+
+echo '>>> Nettoyage des anciennes images...'
+docker image prune -f
+EOF
+
+          DEPLOY_SCRIPT=${DEPLOY_SCRIPT//REPLACE_IMAGE_REF/$IMAGE_REF}
+          DEPLOY_SCRIPT=${DEPLOY_SCRIPT//REPLACE_GCP_REGION/${{ env.GCP_REGION }}}
+          DEPLOY_SCRIPT_B64=$(printf '%s' "$DEPLOY_SCRIPT" | base64 -w0)
 
           gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --tunnel-through-iap \
             --quiet \
-            --command="
-              set -e
-
-              echo '>>> Authentification Artifact Registry...'
-              gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
-
-              TARGET_DIR=/opt/multiserve
-              echo '>>> Vérification du dépôt dans' $TARGET_DIR
-              if [ ! -d \"${TARGET_DIR}/.git\" ]; then
-                echo '>>> Dépôt absent ou non cloné. Clonage...'
-                sudo mkdir -p /opt
-                sudo chown \"$(whoami):$(whoami)\" /opt
-                git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git \"${TARGET_DIR}\"
-              fi
-
-              cd \"${TARGET_DIR}\"
-              git config --global --add safe.directory \"${TARGET_DIR}\"
-              git fetch --all --prune
-              git reset --hard origin/main
-              git clean -fd
-
-              echo '>>> Mise à jour du tag image...'
-              if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
-                sed -i 's|^APP_IMAGE=.*|APP_IMAGE=${IMAGE_REF}|' .env
-              else
-                echo "APP_IMAGE=${IMAGE_REF}" >> .env
-              fi
-
-              if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-                COMPOSE_CMD='docker compose'
-              elif command -v docker-compose >/dev/null 2>&1; then
-                COMPOSE_CMD='docker-compose'
-              else
-                echo 'Docker Compose introuvable'
-                exit 1
-              fi
-
-              echo '>>> Pull de la nouvelle image...'
-              eval "${COMPOSE_CMD} pull app"
-
-              echo '>>> Redémarrage des services...'
-              eval "${COMPOSE_CMD} up -d --no-build"
-
-              echo '>>> État des conteneurs...'
-              eval "${COMPOSE_CMD} ps"
-
-              echo '>>> Nettoyage des anciennes images...'
-              docker image prune -f
-            "
+            --command="echo $DEPLOY_SCRIPT_B64 | base64 -d | bash -s"
 
       - name: Smoke test — vérification santé
         run: |
