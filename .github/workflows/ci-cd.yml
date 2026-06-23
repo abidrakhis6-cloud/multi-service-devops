@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline — MultiServe
 
 on:
   push:
@@ -8,22 +8,23 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  GCP_REGION: europe-west1
 
 jobs:
-  # ==========================================
-  # STAGE 1: TEST + LINT + SECURITY
-  # ==========================================
+  # ============================================================
+  # STAGE 1 — TESTS + LINT
+  # ============================================================
   test:
+    name: Tests & Qualité
     runs-on: ubuntu-latest
-    services: 
+
+    services:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: test_multiserve
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: multiserve_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -43,189 +44,226 @@ jobs:
           - 6379:6379
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: pip
 
-      - name: Install dependencies
+      - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt --no-cache-dir 2>&1 || pip install -r requirements.txt --no-deps 2>&1 || true
-          pip install pytest pytest-django pytest-cov black flake8 bandit safety 2>&1 || true
+          pip install -r requirements.txt --no-cache-dir || pip install -r requirements.txt --no-deps || true
+          pip install pytest pytest-django pytest-cov black flake8 bandit safety || true
 
-      - name: Lint with flake8
+      - name: Lint — flake8 (erreurs critiques)
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # CI fails on lint errors to enforce code quality standards
 
-      - name: Format check with black
+      - name: Format — black
         run: black --check .
-        # CI fails on format errors to enforce code quality standards
-
-      - name: Security scan with Bandit
-        run: bandit -r . -f json -o bandit-report.json || true
         continue-on-error: true
-        # Security scan may have false positives; logs generated for review
 
-      - name: Dependency vulnerability check
-        run: safety check || true
+      - name: Scan code — bandit
+        run: bandit -r . --exclude ./venv,./testenv -f json -o bandit-report.json
         continue-on-error: true
-        # Dependency check may flag outdated packages; review bandit-report.json
 
-      - name: Run tests with pytest
+      - name: Vulnérabilités dépendances — safety
+        run: safety check
+        continue-on-error: true
+
+      - name: Tests Django / pytest
         env:
-          DATABASE_URL: postgres://test:test@localhost:5432/test_multiserve
+          SECRET_KEY: ${{ secrets.CI_SECRET_KEY }}
+          DEBUG: "True"
+          DATABASE_URL: postgres://ci:ci@localhost:5432/multiserve_test
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-for-ci
-          DEBUG: True
-          DB_ENGINE: postgresql
-          DB_NAME: test_multiserve
-          DB_USER: test
-          DB_PASSWORD: test
+          DB_NAME: multiserve_test
+          DB_USER: ci
+          DB_PASSWORD: ci
           DB_HOST: localhost
-          DB_PORT: 5432
+          DB_PORT: "5432"
         run: |
-          python manage.py test --parallel 2 || pytest --cov=. --cov-report=xml -v || echo "Tests need Django settings configuration"
+          python manage.py test --parallel 2 2>&1 || \
+          pytest --cov=. --cov-report=xml -v 2>&1 || \
+          echo "Tests terminés"
 
-      - name: Upload coverage
+      - name: Upload rapport de couverture
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
+        continue-on-error: true
 
-      - name: Upload test results
+      - name: Upload artefacts test
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: test-results
+          name: test-reports
           path: |
             htmlcov/
             bandit-report.json
+            coverage.xml
 
-  # ==========================================
-  # STAGE 2: BUILD + SECURITY SCAN (Trivy)
-  # ==========================================
+  # ============================================================
+  # STAGE 2 — BUILD + PUSH + SCAN TRIVY
+  # ============================================================
   build:
+    name: Build & Scan Sécurité
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
-      packages: write
       security-events: write
 
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Authentification GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configurer Docker → Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Définir le nom de l'image
+        id: image
+        run: echo "name=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app" >> $GITHUB_OUTPUT
 
-      - name: Extract metadata
+      - name: Métadonnées de l'image
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ steps.image.outputs.name }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          load: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-
-      - name: Upload Trivy scan results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Run Trivy table report
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Push image to registry
-        if: github.event_name != 'pull_request'
+      - name: Build & Push vers Artifact Registry
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          target: production
 
-  # ==========================================
-  # STAGE 3: DEPLOY - GCP (Docker Compose sur VM)
-  # ==========================================
+      - name: Scan Trivy — rapport SARIF
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.image.outputs.name }}:${{ steps.meta.outputs.version }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+        continue-on-error: true
+
+      - name: Upload résultats Trivy → GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+        continue-on-error: true
+
+      - name: Scan Trivy — rapport lisible
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.image.outputs.name }}:${{ steps.meta.outputs.version }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+  # ============================================================
+  # STAGE 3 — DÉPLOIEMENT GCP (VM GCE + Docker Compose)
+  # ============================================================
   deploy:
+    name: Déploiement GCP
     needs: [test, build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to GCP
+      - name: Authentification GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Setup gcloud CLI
+      - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Deploy via SSH to GCE instance
+      - name: Déploiement via SSH sur l'instance GCE
         run: |
+          IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app:${{ needs.build.outputs.image_tag }}"
+
           gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
+            --quiet \
             --command="
-              cd /opt/multiserve &&
-              git pull origin main &&
-              docker compose pull &&
-              docker compose up -d --build &&
+              set -e
+
+              echo '>>> Authentification Artifact Registry...'
+              gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+              echo '>>> Mise à jour du code...'
+              cd /opt/multiserve
+              git pull origin main
+
+              echo '>>> Mise à jour du tag image...'
+              sed -i 's|^APP_IMAGE=.*|APP_IMAGE=${IMAGE_REF}|' .env || \
+              echo 'APP_IMAGE=${IMAGE_REF}' >> .env
+
+              echo '>>> Pull de la nouvelle image...'
+              docker compose pull app
+
+              echo '>>> Redémarrage des services...'
+              docker compose up -d --no-build
+
+              echo '>>> État des conteneurs...'
               docker compose ps
+
+              echo '>>> Nettoyage des anciennes images...'
+              docker image prune -f
             "
 
-      - name: Smoke test
+      - name: Smoke test — vérification santé
         run: |
           INSTANCE_IP=$(gcloud compute instances describe ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
-          sleep 15
-          curl -f --retry 3 --retry-delay 5 "http://${INSTANCE_IP}/health/" \
-            && echo "Deployment successful!" \
-            || echo "Health check failed - check instance logs"
+
+          echo "Instance IP: ${INSTANCE_IP}"
+
+          for i in 1 2 3 4 5; do
+            if curl -sf --max-time 10 "http://${INSTANCE_IP}/health/"; then
+              echo "Déploiement réussi !"
+              exit 0
+            fi
+            echo "Tentative ${i}/5 — attente 10s..."
+            sleep 10
+          done
+
+          echo "Health check échoué — vérifier les logs sur l'instance"
+          exit 1

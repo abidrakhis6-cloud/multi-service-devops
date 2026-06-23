@@ -10,6 +10,7 @@ services:
   # Django Application
   # ==========================================
   app:
+    image: ${APP_IMAGE:-multiserve_app:latest}
     build:
       context: .
       dockerfile: Dockerfile
