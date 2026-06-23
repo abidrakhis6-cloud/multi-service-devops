@@ -233,6 +233,12 @@ jobs:
             echo "APP_IMAGE=IMAGE_REF" >> .env
           fi
 
+          if grep -q '^ALLOWED_HOSTS=' .env 2>/dev/null; then
+            sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env
+          else
+            echo "ALLOWED_HOSTS=*" >> .env
+          fi
+
           if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
             COMPOSE_CMD='docker compose'
           elif command -v docker-compose >/dev/null 2>&1; then
