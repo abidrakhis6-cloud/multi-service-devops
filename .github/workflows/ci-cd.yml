@@ -273,7 +273,7 @@ jobs:
           echo "Instance IP: ${INSTANCE_IP}"
 
           for i in 1 2 3 4 5; do
-            if curl -sf --max-time 10 "http://${INSTANCE_IP}/health/"; then
+            if curl -sf --max-time 10 "http://${INSTANCE_IP}:8080/health/"; then
               echo "Déploiement réussi !"
               exit 0
             fi
