@@ -334,51 +334,5 @@ jobs:
         run: |
           echo "Health check failed after deploy. Voir les logs du pas précédent."
           exit 1
-
   remote-restart:
-    name: Remote Restart Containers (SSH)
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Authenticate GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Prepare SSH key (optional)
-        run: |
-          mkdir -p $HOME/.ssh
-          if [ ! -f $HOME/.ssh/google_compute_engine ]; then
-            ssh-keygen -t rsa -f $HOME/.ssh/google_compute_engine -N '' || true
-          fi
-
-      - name: Configure Docker auth on VM and restart containers
-        env:
-          GCE_ZONE: ${{ secrets.GCE_ZONE }}
-          GCE_INSTANCE: ${{ secrets.GCE_INSTANCE_NAME }}
-          GCP_REGION: ${{ env.GCP_REGION }}
-        run: |
-          set -xe
-          # Get an access token and forward it to the VM so it can pull from Artifact Registry
-          ACCESS_TOKEN="$(gcloud auth print-access-token)"
-
-          # Configure docker on the VM (login to Artifact Registry)
-          gcloud compute ssh "$GCE_INSTANCE" --zone="$GCE_ZONE" --command="echo \"$ACCESS_TOKEN\" | docker login -u oauth2accesstoken --password-stdin https://$GCP_REGION-docker.pkg.dev" || true
-
-          # Update repo and restart containers (pull + recreate)
-          gcloud compute ssh "$GCE_INSTANCE" --zone="$GCE_ZONE" --command="cd /opt/multiserve && sudo git fetch --all && sudo git reset --hard origin/main && sudo docker compose pull app || true && sudo docker compose up -d --force-recreate || true"
-
-          # Show containers and nginx logs for debugging
-          gcloud compute ssh "$GCE_INSTANCE" --zone="$GCE_ZONE" --command="sudo docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
-          gcloud compute ssh "$GCE_INSTANCE" --zone="$GCE_ZONE" --command="sudo docker logs multiserve_nginx --tail 200" || true
 
