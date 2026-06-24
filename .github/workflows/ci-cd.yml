@@ -249,13 +249,13 @@ jobs:
           fi
 
           echo '>>> Pull de la nouvelle image...'
-          $COMPOSE_CMD pull app
+          $COMPOSE_CMD -f docker-compose.free.yml pull app
 
           echo '>>> Redémarrage des services...'
-          $COMPOSE_CMD up -d --no-build
+          $COMPOSE_CMD -f docker-compose.free.yml up -d --no-build
 
           echo '>>> État des conteneurs...'
-          $COMPOSE_CMD ps
+          $COMPOSE_CMD -f docker-compose.free.yml ps
 
           echo '>>> Nettoyage des anciennes images...'
           docker image prune -f
@@ -310,7 +310,7 @@ jobs:
           echo "Instance IP: ${INSTANCE_IP}"
 
           for i in 1 2 3 4 5; do
-            if curl -sk --max-time 10 "https://${INSTANCE_IP}:8443/health/"; then
+            if curl -s --max-time 10 "http://${INSTANCE_IP}:8080/health/"; then
               echo "Déploiement réussi !"
               exit 0
             fi
