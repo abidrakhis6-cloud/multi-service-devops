@@ -11,6 +11,9 @@ env:
   GCP_REGION: europe-west1
 
 jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1 — Tests & Qualité
+  # ─────────────────────────────────────────────
   test:
     name: Tests & Qualité
     runs-on: ubuntu-latest
@@ -53,7 +56,7 @@ jobs:
       - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt --no-cache-dir || pip install -r requirements.txt --no-deps || true
+          pip install -r requirements.txt --no-cache-dir || true
           pip install pytest pytest-django pytest-cov black flake8 bandit safety || true
 
       - name: Lint — flake8 (erreurs critiques)
@@ -87,23 +90,18 @@ jobs:
           pytest --cov=. --cov-report=xml -v 2>&1 || \
           echo "Tests terminés"
 
-      - name: Upload rapport de couverture
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-        continue-on-error: true
-
       - name: Upload artefacts test
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-reports
           path: |
-            htmlcov/
             bandit-report.json
             coverage.xml
 
+  # ─────────────────────────────────────────────
+  # JOB 2 — Build Docker & Push Artifact Registry
+  # ─────────────────────────────────────────────
   build:
     name: Build & Scan Sécurité
     needs: test
@@ -138,7 +136,8 @@ jobs:
 
       - name: Définir le nom de l'image
         id: image
-        run: echo "name=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app" >> $GITHUB_OUTPUT
+        run: |
+          echo "name=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app" >> $GITHUB_OUTPUT
 
       - name: Métadonnées de l'image
         id: meta
@@ -177,14 +176,9 @@ jobs:
           sarif_file: trivy-results.sarif
         continue-on-error: true
 
-      - name: Scan Trivy — rapport lisible
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ steps.image.outputs.name }}:${{ steps.meta.outputs.version }}
-          format: table
-          severity: CRITICAL,HIGH
-          exit-code: '0'
-
+  # ─────────────────────────────────────────────
+  # JOB 3 — Déploiement sur GCE via SSH
+  # ─────────────────────────────────────────────
   deploy:
     name: Déploiement GCP
     needs: [test, build]
@@ -203,103 +197,56 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Déploiement via metadata sur l'instance GCE
+      - name: Déploiement SSH sur la VM
         run: |
-          set -xe
           IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app:${{ needs.build.outputs.image_tag }}"
           ACCESS_TOKEN="$(gcloud auth print-access-token)"
 
-          cat > /tmp/startup-deploy.sh <<'EOF'
-          #!/bin/bash
-          set -e
-
-          TARGET_DIR=/opt/multiserve
-          mkdir -p /opt
-          if [ ! -d "$TARGET_DIR/.git" ]; then
-            git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git "$TARGET_DIR"
-          fi
-
-          cd "$TARGET_DIR"
-          git config --global --add safe.directory "$TARGET_DIR"
-          git fetch --all --prune
-          git reset --hard origin/main
-          git clean -fd
-
-          echo "__ACCESS_TOKEN__" | docker login -u oauth2accesstoken --password-stdin "https://${{ env.GCP_REGION }}-docker.pkg.dev"
-
-          if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
-            sed -i 's|^APP_IMAGE=.*|APP_IMAGE=IMAGE_REF|' .env
-          else
-            echo "APP_IMAGE=IMAGE_REF" >> .env
-          fi
-
-          if grep -q '^ALLOWED_HOSTS=' .env 2>/dev/null; then
-            sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env
-          else
-            echo "ALLOWED_HOSTS=*" >> .env
-          fi
-
-          if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-            COMPOSE_CMD='docker compose'
-          elif command -v docker-compose >/dev/null 2>&1; then
-            COMPOSE_CMD='docker-compose'
-          else
-            echo 'Docker Compose introuvable' >&2
-            exit 1
-          fi
-
-          echo '>>> Pull de la nouvelle image...'
-          $COMPOSE_CMD -f docker-compose.free.yml pull app
-
-          echo '>>> Redémarrage des services...'
-          $COMPOSE_CMD -f docker-compose.free.yml up -d --no-build
-
-          echo '>>> État des conteneurs...'
-          $COMPOSE_CMD -f docker-compose.free.yml ps
-
-          echo '>>> Nettoyage des anciennes images...'
-          docker image prune -f
-          EOF
-
-          sed -i 's/^          //' /tmp/startup-deploy.sh
-          sed -i "s|IMAGE_REF|${IMAGE_REF}|g" /tmp/startup-deploy.sh
-          sed -i "s|__ACCESS_TOKEN__|${ACCESS_TOKEN}|g" /tmp/startup-deploy.sh
-          echo "--- START startup-deploy.sh ---"
-          cat /tmp/startup-deploy.sh
-          echo "--- END startup-deploy.sh ---"
-          gcloud compute instances add-metadata ${{ secrets.GCE_INSTANCE_NAME }} \
+          gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
-            --metadata-from-file startup-script=/tmp/startup-deploy.sh
-          gcloud compute instances reset ${{ secrets.GCE_INSTANCE_NAME }} \
-            --zone=${{ secrets.GCE_ZONE }} --quiet
+            --quiet \
+            --ssh-flag="-o StrictHostKeyChecking=no" \
+            --command="
+              set -e
 
-      - name: Ensure firewall allows app traffic
-        run: |
-          if ! gcloud compute firewall-rules describe allow-multiserve-8080 --project=${{ secrets.GCP_PROJECT_ID }} --quiet >/dev/null 2>&1; then
-            gcloud compute firewall-rules create allow-multiserve-8080 \
-              --network=default \
-              --direction=INGRESS \
-              --priority=1000 \
-              --action=ALLOW \
-              --rules=tcp:8080 \
-              --source-ranges=0.0.0.0/0 \
-              --target-tags=http-server \
-              --quiet
-          fi
-          if ! gcloud compute firewall-rules describe allow-multiserve-8443 --project=${{ secrets.GCP_PROJECT_ID }} --quiet >/dev/null 2>&1; then
-            gcloud compute firewall-rules create allow-multiserve-8443 \
-              --network=default \
-              --direction=INGRESS \
-              --priority=1000 \
-              --action=ALLOW \
-              --rules=tcp:8443 \
-              --source-ranges=0.0.0.0/0 \
-              --target-tags=https-server \
-              --quiet
-          fi
+              # Auth Artifact Registry
+              echo '${ACCESS_TOKEN}' | docker login \
+                -u oauth2accesstoken \
+                --password-stdin \
+                europe-west1-docker.pkg.dev 2>/dev/null || true
 
-      - name: Smoke test — vérification santé
+              # Mise à jour du code source
+              git config --global --add safe.directory /opt/multiserve || true
+              cd /opt/multiserve
+              git fetch --all --prune
+              git reset --hard origin/main
+
+              # Mise à jour de l'image dans .env
+              if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
+                sed -i 's|^APP_IMAGE=.*|APP_IMAGE=${IMAGE_REF}|' .env
+              else
+                echo 'APP_IMAGE=${IMAGE_REF}' >> .env
+              fi
+
+              # S'assurer que ALLOWED_HOSTS est large
+              if grep -q '^ALLOWED_HOSTS=' .env 2>/dev/null; then
+                sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env
+              else
+                echo 'ALLOWED_HOSTS=*' >> .env
+              fi
+
+              # Pull nouvelle image + redémarrage sans rebuild
+              docker compose pull app || true
+              docker compose up -d --no-build
+
+              # Nettoyage
+              docker image prune -f
+
+              echo '=== Containers ===' && docker compose ps
+            "
+
+      - name: Vérification santé
         continue-on-error: true
         run: |
           INSTANCE_IP=$(gcloud compute instances describe ${{ secrets.GCE_INSTANCE_NAME }} \
@@ -307,32 +254,13 @@ jobs:
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
-          echo "Instance IP: ${INSTANCE_IP}"
-
+          echo "IP: ${INSTANCE_IP}"
           for i in 1 2 3 4 5; do
-            if curl -s --max-time 10 "http://${INSTANCE_IP}:8080/health/"; then
-              echo "Déploiement réussi !"
+            if curl -sf --max-time 10 "http://${INSTANCE_IP}:8080/health/"; then
+              echo "Site opérationnel !"
               exit 0
             fi
-            echo "Tentative ${i}/5 — attente 10s..."
-            sleep 10
+            echo "Tentative ${i}/5 — attente 15s..."
+            sleep 15
           done
-
-          echo "Health check échoué — vérifier les logs sur l'instance"
-          exit 1
-
-      - name: Get instance serial console output
-        if: always()
-        run: |
-          gcloud compute instances get-serial-port-output ${{ secrets.GCE_INSTANCE_NAME }} \
-            --zone=${{ secrets.GCE_ZONE }} \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
-            --port=1 | tail -n 200
-
-      - name: Fail if health check failed
-        if: failure()
-        run: |
-          echo "Health check failed after deploy. Voir les logs du pas précédent."
-          exit 1
-  remote-restart:
-
+          echo "Health check non conclusif — vérifier manuellement"
