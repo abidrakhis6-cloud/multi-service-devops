@@ -177,7 +177,9 @@ jobs:
         continue-on-error: true
 
   # ─────────────────────────────────────────────
-  # JOB 3 — Déploiement sur GCE via SSH
+  # JOB 3 — Déploiement via startup script + reset
+  # Le script tourne sur la VM comme root — pas de problème
+  # de permissions SSH/docker. IP conservée après reset.
   # ─────────────────────────────────────────────
   deploy:
     name: Déploiement GCP
@@ -197,54 +199,69 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Déploiement SSH sur la VM
+      - name: Préparer le startup script de déploiement
         run: |
           IMAGE_REF="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/multiserve/app:${{ needs.build.outputs.image_tag }}"
-          ACCESS_TOKEN="$(gcloud auth print-access-token)"
 
-          gcloud compute ssh ${{ secrets.GCE_INSTANCE_NAME }} \
+          cat > /tmp/startup-deploy.sh << 'STARTUP'
+          #!/bin/bash
+          exec > /tmp/deploy.log 2>&1
+          set -e
+          echo "[$(date)] === Déploiement MultiServe ==="
+
+          TARGET=/opt/multiserve
+          [ -d "$TARGET/.git" ] || git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git "$TARGET"
+
+          cd "$TARGET"
+          git config --global --add safe.directory "$TARGET"
+          git fetch --all --prune
+          git reset --hard origin/main
+
+          # Auth Artifact Registry via le SA attaché à la VM (pas de token hardcodé)
+          gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+
+          APP_IMG="__APP_IMAGE__"
+          if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
+            sed -i "s|^APP_IMAGE=.*|APP_IMAGE=${APP_IMG}|" .env
+          else
+            echo "APP_IMAGE=${APP_IMG}" >> .env
+          fi
+
+          if grep -q '^ALLOWED_HOSTS=' .env 2>/dev/null; then
+            sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env
+          else
+            echo 'ALLOWED_HOSTS=*' >> .env
+          fi
+
+          docker compose -f docker-compose.free.yml pull app
+          docker compose -f docker-compose.free.yml up -d --no-build
+          docker image prune -f
+
+          echo "[$(date)] === État des containers ==="
+          docker compose -f docker-compose.free.yml ps
+          STARTUP
+
+          # Supprimer l'indentation du heredoc et injecter l'image
+          sed -i 's/^          //' /tmp/startup-deploy.sh
+          sed -i "s|__APP_IMAGE__|${IMAGE_REF}|g" /tmp/startup-deploy.sh
+          echo "Image configurée : ${IMAGE_REF}"
+
+      - name: Mettre à jour le startup script sur la VM
+        run: |
+          gcloud compute instances add-metadata ${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_ZONE }} \
             --project=${{ secrets.GCP_PROJECT_ID }} \
-            --quiet \
-            --ssh-flag="-o StrictHostKeyChecking=no" \
-            --command="
-              set -e
+            --metadata-from-file=startup-script=/tmp/startup-deploy.sh
 
-              # Auth Artifact Registry
-              echo '${ACCESS_TOKEN}' | docker login \
-                -u oauth2accesstoken \
-                --password-stdin \
-                europe-west1-docker.pkg.dev 2>/dev/null || true
+      - name: Reset VM pour déclencher le déploiement (IP conservée)
+        run: |
+          gcloud compute instances reset ${{ secrets.GCE_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCE_ZONE }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --quiet
 
-              # Mise à jour du code source
-              git config --global --add safe.directory /opt/multiserve || true
-              cd /opt/multiserve
-              git fetch --all --prune
-              git reset --hard origin/main
-
-              # Mise à jour de l'image dans .env
-              if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
-                sed -i 's|^APP_IMAGE=.*|APP_IMAGE=${IMAGE_REF}|' .env
-              else
-                echo 'APP_IMAGE=${IMAGE_REF}' >> .env
-              fi
-
-              # S'assurer que ALLOWED_HOSTS est large
-              if grep -q '^ALLOWED_HOSTS=' .env 2>/dev/null; then
-                sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env
-              else
-                echo 'ALLOWED_HOSTS=*' >> .env
-              fi
-
-              # Pull nouvelle image + redémarrage sans rebuild
-              docker compose pull app || true
-              docker compose up -d --no-build
-
-              # Nettoyage
-              docker image prune -f
-
-              echo '=== Containers ===' && docker compose ps
-            "
+      - name: Attendre le démarrage de la VM et du startup script
+        run: sleep 90
 
       - name: Vérification santé
         continue-on-error: true
@@ -255,12 +272,12 @@ jobs:
             --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
           echo "IP: ${INSTANCE_IP}"
-          for i in 1 2 3 4 5; do
+          for i in 1 2 3 4 5 6; do
             if curl -sf --max-time 10 "http://${INSTANCE_IP}:8080/health/"; then
               echo "Site opérationnel !"
               exit 0
             fi
-            echo "Tentative ${i}/5 — attente 15s..."
-            sleep 15
+            echo "Tentative ${i}/6 — attente 20s..."
+            sleep 20
           done
-          echo "Health check non conclusif — vérifier manuellement"
+          echo "Health check non conclusif — containers peuvent encore démarrer"
