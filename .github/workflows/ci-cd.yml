@@ -208,60 +208,46 @@ jobs:
           set -e
           echo "[$(date)] === MultiServe deploy start ==="
 
-          # Attendre que le réseau soit disponible avant git fetch
-          echo "Waiting for network..."
+          # Attendre que le réseau soit disponible
           for i in $(seq 1 15); do
-            if curl -sf --max-time 5 https://github.com > /dev/null 2>&1; then
-              echo "Network ready after ${i} attempts"
-              break
-            fi
-            echo "  attempt ${i}/15..."
+            curl -sf --max-time 5 https://github.com > /dev/null 2>&1 && echo "Network OK" && break
+            echo "waiting network ${i}..."
             sleep 2
           done
 
           TARGET=/opt/multiserve
           [ -d "$TARGET/.git" ] || git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git "$TARGET"
 
+          # Chown root pour éviter le check safe.directory
+          chown -R root:root "$TARGET"
           cd "$TARGET"
-          git config --global --add safe.directory "$TARGET"
 
-          # Retry git fetch en cas d'erreur réseau transitoire
+          # git -c safe.directory évite d'écrire dans $HOME/.gitconfig
           for i in 1 2 3; do
-            git fetch --all --prune && break
-            echo "git fetch attempt ${i} failed, retrying in 5s..."
+            git -c safe.directory="$TARGET" fetch --all --prune && break
+            echo "git fetch attempt ${i} failed, retry..."
             sleep 5
           done
+          git -c safe.directory="$TARGET" reset --hard origin/main
 
-          git reset --hard origin/main
-
-          # Arrêter anciens containers (cleanup multi-stack)
+          # Arrêter anciens containers
           docker compose down --remove-orphans 2>/dev/null || true
           docker compose -f docker-compose.free.yml down --remove-orphans 2>/dev/null || true
 
-          # Auth Artifact Registry via le SA attaché à la VM (roles/editor)
-          gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+          # Auth Artifact Registry via le SA de la VM (HOME requis par gcloud)
+          HOME=/root gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
 
           APP_IMG="__APP_IMAGE__"
-          if grep -q '^APP_IMAGE=' .env 2>/dev/null; then
-            sed -i "s|^APP_IMAGE=.*|APP_IMAGE=${APP_IMG}|" .env
-          else
-            echo "APP_IMAGE=${APP_IMG}" >> .env
-          fi
-
-          if grep -q '^ALLOWED_HOSTS=' .env 2>/dev/null; then
-            sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env
-          else
-            echo 'ALLOWED_HOSTS=*' >> .env
-          fi
+          grep -q '^APP_IMAGE=' .env && sed -i "s|^APP_IMAGE=.*|APP_IMAGE=${APP_IMG}|" .env || echo "APP_IMAGE=${APP_IMG}" >> .env
+          grep -q '^ALLOWED_HOSTS=' .env && sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env || echo 'ALLOWED_HOSTS=*' >> .env
 
           echo "[$(date)] Pulling image from Artifact Registry..."
-          docker compose -f docker-compose.free.yml pull app
+          HOME=/root docker compose -f docker-compose.free.yml pull app
 
           echo "[$(date)] Starting containers..."
           docker compose -f docker-compose.free.yml up -d --no-build
 
           docker image prune -f
-
           echo "[$(date)] === Deploy done ==="
           docker compose -f docker-compose.free.yml ps
           STARTUP
