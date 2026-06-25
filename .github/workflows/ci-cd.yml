@@ -205,19 +205,40 @@ jobs:
 
           cat > /tmp/startup-deploy.sh << 'STARTUP'
           #!/bin/bash
-          exec > /tmp/deploy.log 2>&1
           set -e
-          echo "[$(date)] === Déploiement MultiServe ==="
+          echo "[$(date)] === MultiServe deploy start ==="
+
+          # Attendre que le réseau soit disponible avant git fetch
+          echo "Waiting for network..."
+          for i in $(seq 1 15); do
+            if curl -sf --max-time 5 https://github.com > /dev/null 2>&1; then
+              echo "Network ready after ${i} attempts"
+              break
+            fi
+            echo "  attempt ${i}/15..."
+            sleep 2
+          done
 
           TARGET=/opt/multiserve
           [ -d "$TARGET/.git" ] || git clone https://github.com/abidrakhis6-cloud/multi-service-devops.git "$TARGET"
 
           cd "$TARGET"
           git config --global --add safe.directory "$TARGET"
-          git fetch --all --prune
+
+          # Retry git fetch en cas d'erreur réseau transitoire
+          for i in 1 2 3; do
+            git fetch --all --prune && break
+            echo "git fetch attempt ${i} failed, retrying in 5s..."
+            sleep 5
+          done
+
           git reset --hard origin/main
 
-          # Auth Artifact Registry via le SA attaché à la VM (pas de token hardcodé)
+          # Arrêter anciens containers (cleanup multi-stack)
+          docker compose down --remove-orphans 2>/dev/null || true
+          docker compose -f docker-compose.free.yml down --remove-orphans 2>/dev/null || true
+
+          # Auth Artifact Registry via le SA attaché à la VM (roles/editor)
           gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
 
           APP_IMG="__APP_IMAGE__"
@@ -233,11 +254,15 @@ jobs:
             echo 'ALLOWED_HOSTS=*' >> .env
           fi
 
+          echo "[$(date)] Pulling image from Artifact Registry..."
           docker compose -f docker-compose.free.yml pull app
+
+          echo "[$(date)] Starting containers..."
           docker compose -f docker-compose.free.yml up -d --no-build
+
           docker image prune -f
 
-          echo "[$(date)] === État des containers ==="
+          echo "[$(date)] === Deploy done ==="
           docker compose -f docker-compose.free.yml ps
           STARTUP
 
