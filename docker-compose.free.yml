@@ -101,12 +101,14 @@ services:
     container_name: multiserve_nginx
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx-free.conf:/etc/nginx/nginx.conf:ro
       - static_volume:/var/www/static:ro
       - media_volume:/var/www/media:ro
       - ./nginx/logs:/var/log/nginx
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
     networks:
