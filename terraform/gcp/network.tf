@@ -90,3 +90,29 @@ resource "google_compute_firewall" "allow_health_checks" {
   source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
   description   = "Autorise les health checks Google Load Balancer"
 }
+
+resource "google_compute_firewall" "allow_web" {
+  name    = "multiserve-allow-web"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "8080", "443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Autorise le trafic web entrant (HTTP/8080/HTTPS)"
+}
+
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "multiserve-allow-ssh"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Autorise SSH pour la maintenance"
+}

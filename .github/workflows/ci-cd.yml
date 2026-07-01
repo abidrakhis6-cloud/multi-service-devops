@@ -234,12 +234,37 @@ jobs:
           docker compose down --remove-orphans 2>/dev/null || true
           docker compose -f docker-compose.free.yml down --remove-orphans 2>/dev/null || true
 
+          # Créer .env seulement s'il n'existe pas (protège les secrets existants)
+          # Si .env existe déjà, on met à jour uniquement APP_IMAGE et ALLOWED_HOSTS
+          if [ ! -f "$TARGET/.env" ]; then
+            echo "[$(date)] Création du fichier .env initial..."
+            printf '%s\n' \
+              'DB_NAME=multiserve' \
+              'DB_USER=admin' \
+              'DB_PASSWORD=__DB_PASSWORD__' \
+              'DB_HOST=db' \
+              'DB_PORT=5432' \
+              'SECRET_KEY=__SECRET_KEY__' \
+              'DEBUG=False' \
+              'ALLOWED_HOSTS=*' \
+              'REDIS_PASSWORD=__REDIS_PASSWORD__' \
+              'APP_IMAGE=__APP_IMAGE__' \
+              'SECURE_SSL_REDIRECT=False' \
+              'CSRF_TRUSTED_ORIGINS=http://localhost' \
+              'CORS_ALLOWED_ORIGINS=http://localhost' \
+              > "$TARGET/.env"
+          else
+            echo "[$(date)] .env existant detecte — mise a jour APP_IMAGE seulement"
+            grep -q '^APP_IMAGE=' "$TARGET/.env" && \
+              sed -i "s|^APP_IMAGE=.*|APP_IMAGE=__APP_IMAGE__|" "$TARGET/.env" || \
+              echo "APP_IMAGE=__APP_IMAGE__" >> "$TARGET/.env"
+            grep -q '^ALLOWED_HOSTS=' "$TARGET/.env" && \
+              sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' "$TARGET/.env" || \
+              echo 'ALLOWED_HOSTS=*' >> "$TARGET/.env"
+          fi
+
           # Auth Artifact Registry via le SA de la VM (HOME requis par gcloud)
           HOME=/root gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
-
-          APP_IMG="__APP_IMAGE__"
-          grep -q '^APP_IMAGE=' .env && sed -i "s|^APP_IMAGE=.*|APP_IMAGE=${APP_IMG}|" .env || echo "APP_IMAGE=${APP_IMG}" >> .env
-          grep -q '^ALLOWED_HOSTS=' .env && sed -i 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=*|' .env || echo 'ALLOWED_HOSTS=*' >> .env
 
           echo "[$(date)] Pulling image from Artifact Registry..."
           HOME=/root docker compose -f docker-compose.free.yml pull app
@@ -247,14 +272,24 @@ jobs:
           echo "[$(date)] Starting containers..."
           docker compose -f docker-compose.free.yml up -d --no-build
 
+          # Attendre que Django soit prêt avant migrate
+          echo "[$(date)] Waiting for app to be ready..."
+          sleep 30
+          docker compose -f docker-compose.free.yml exec -T app python manage.py migrate --noinput || \
+            echo "[WARN] migrate non conclusif — DB peut nécessiter quelques secondes de plus"
+
           docker image prune -f
           echo "[$(date)] === Deploy done ==="
           docker compose -f docker-compose.free.yml ps
           STARTUP
 
-          # Supprimer l'indentation du heredoc et injecter l'image
+          # Supprimer l'indentation du heredoc externe
           sed -i 's/^          //' /tmp/startup-deploy.sh
-          sed -i "s|__APP_IMAGE__|${IMAGE_REF}|g" /tmp/startup-deploy.sh
+          # Injecter les valeurs depuis les secrets GitHub Actions
+          sed -i "s|__APP_IMAGE__|${IMAGE_REF}|g"                       /tmp/startup-deploy.sh
+          sed -i "s|__SECRET_KEY__|${{ secrets.DJANGO_SECRET_KEY }}|g"  /tmp/startup-deploy.sh
+          sed -i "s|__DB_PASSWORD__|${{ secrets.DJANGO_DB_PASSWORD }}|g" /tmp/startup-deploy.sh
+          sed -i "s|__REDIS_PASSWORD__|${{ secrets.DJANGO_REDIS_PASSWORD }}|g" /tmp/startup-deploy.sh
           echo "Image configurée : ${IMAGE_REF}"
 
       - name: Mettre à jour le startup script sur la VM
